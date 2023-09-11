@@ -1,0 +1,3 @@
+curl -Uri http://127.0.0.1:8080/api/signup -Method Post -Body '{"username": "test", "password": "test", "email": "test@test.test", "displayname": "test", "dob": "8/9/20"}'
+
+curl -Uri "http://127.0.0.1:8080/api/login" -Method Post -Body '{"username": "test", "password": "test"}'

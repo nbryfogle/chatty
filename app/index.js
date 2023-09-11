@@ -1,5 +1,8 @@
 const socket = io("http://127.0.0.1:8080/", {
     reconnectionDelayMax: 10000,
+    query: {
+        "session": "44492fa2-4826-433c-9900-3ef88b714ac7"
+    }
 });
 
 socket.on("connect", () => {
@@ -16,4 +19,11 @@ socket.on("message", (data) => {
 function sendMessage() {
     socket.emit("message", document.getElementById("message").value);
     document.getElementById("message").value = "";
+}
+
+function onKeyDown(event) {
+    console.log("event.keyCode", event.keyCode);
+    if (event.keyCode == 13) {
+        sendMessage();
+    }
 }

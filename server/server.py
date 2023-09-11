@@ -3,6 +3,7 @@ import socketio
 import bcrypt
 from database import Database
 import asyncio
+from uuid import uuid4
 
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 app = web.Application()
@@ -32,26 +33,62 @@ async def signup(request):
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (data['email'], data['username'], password, salt, data['displayname'], data['dob']))
     await db.conn.commit()
-    return web.Response(body="OK")
+    return web.Response(status=200)
 
-@routes.get('/api/login')
+@routes.post('/api/login')
 async def login(request):
     data = await request.json()
     # Check if the data is valid, if the user exists and whether the password matches after hashing
-    # If the user exists and the password matches, return a token
-    return web.Response(body="OK")
+    # If the user exists and the password matches, return a token 
+    await db.c.execute('''
+        SELECT * FROM users WHERE username = ?
+    ''', (data['username'],))
+    user = await db.c.fetchone()
+    print(user)
+
+    if user is None:
+        return web.Response(status=404)
+    
+    if bcrypt.checkpw(bytes(data['password'], encoding='utf-8'), user[2]):
+        if user[6] is None:
+            session = str(uuid4())
+            await db.c.execute('''
+                UPDATE users SET session = ? WHERE username = ?
+            ''', (session, data['username']))
+            await db.conn.commit()
+            return web.Response(status=200, body=session)
+        
+    return web.Response(status=401)
+
+async def authenticate_user(token):
+    await db.c.execute('''
+        SELECT * FROM users WHERE session = ?
+    ''', (token,))
+    user = await db.c.fetchone()
+    if user is None:
+        return False
+    return user[0]
 
 @sio.event
 async def connect(sid: str, data: dict):
+    username = await authenticate_user(data['token'])
+    
+    if username is False:
+        await sio.disconnect(sid)
+        return
+    
+    await sio.save_session(sid, {'username': username})
+
     print('connect ', sid)
 
 @sio.event
 async def message(sid, data):
-    print('message ', sid)
+    session = await sio.get_session(sid)
+    print('message from ', session['username'])
     print(data)
     await sio.emit('message', data)
 
-app.add_routes([web.post('/api/signup', signup), web.get('/api/login', login)])
+app.add_routes([web.post('/api/signup', signup), web.post('/api/login', login)])
 
 if __name__ == "__main__": 
     try:
