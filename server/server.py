@@ -70,8 +70,10 @@ async def authenticate_user(token):
     return user[0]
 
 @sio.event
-async def connect(sid: str, data: dict):
-    username = await authenticate_user(data['token'])
+async def connect(sid: str, data: dict, auth: dict):
+    print("attempting to connect...")
+    print(auth)
+    username = await authenticate_user(auth['session'])
     
     if username is False:
         await sio.disconnect(sid)
@@ -84,6 +86,7 @@ async def connect(sid: str, data: dict):
 @sio.event
 async def message(sid, data):
     session = await sio.get_session(sid)
+    
     print('message from ', session['username'])
     print(data)
     await sio.emit('message', data)

@@ -1,6 +1,6 @@
 const socket = io("http://127.0.0.1:8080/", {
     reconnectionDelayMax: 10000,
-    query: {
+    auth: {
         "session": "44492fa2-4826-433c-9900-3ef88b714ac7"
     }
 });
