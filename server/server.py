@@ -15,7 +15,6 @@ routes = web.RouteTableDef()
 
 @routes.post('/api/signup')
 async def signup(request):
-    data = await request.json()
     """
     Data example:
     {
@@ -25,6 +24,7 @@ async def signup(request):
         "display_name": "test"
     }
     """
+    data = await request.json()
     salt=bcrypt.gensalt()
     password = bcrypt.hashpw(bytes(data['password'], encoding='utf-8'), salt)
     print(data["dob"])
@@ -37,6 +37,11 @@ async def signup(request):
 
 @routes.post('/api/login')
 async def login(request):
+    """
+    This request allows a user to get a session token using their username and 
+    password combination. This session token will allow the user to connect to 
+    the socketIO server.
+    """
     data = await request.json()
     # Check if the data is valid, if the user exists and whether the password matches after hashing
     # If the user exists and the password matches, return a token 
@@ -61,6 +66,10 @@ async def login(request):
     return web.Response(status=401)
 
 async def authenticate_user(token):
+    """
+    Make sure the session token that the client is trying to connect with exists
+    and is valid.
+    """
     await db.c.execute('''
         SELECT * FROM users WHERE session = ?
     ''', (token,))
@@ -71,6 +80,10 @@ async def authenticate_user(token):
 
 @sio.event
 async def connect(sid: str, data: dict, auth: dict):
+    """
+    When a user connects, their session token will be checked. If the 
+    token is valid, it will allow them to connect.
+    """
     print("attempting to connect...")
     print(auth)
     username = await authenticate_user(auth['session'])
@@ -78,7 +91,7 @@ async def connect(sid: str, data: dict, auth: dict):
     if username is False:
         await sio.disconnect(sid)
         return
-    
+
     await sio.save_session(sid, {'username': username})
 
     print('connect ', sid)
