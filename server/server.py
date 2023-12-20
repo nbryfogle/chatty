@@ -1,20 +1,22 @@
-from aiohttp import web
+from quart import Quart, request
 import socketio
 import bcrypt
-from database import Database
+from database import Database, User
 import asyncio
 from uuid import uuid4
+import hypercorn.asyncio as hasync
+import hypercorn.config as hconfig
 
-sio = socketio.AsyncServer(cors_allowed_origins='*')
-app = web.Application()
-# wrap with a WSGI application
-sio.attach(app)
+sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='asgi')
+app = Quart(__name__, instance_relative_config=True)
+
+# wrap with an ASGI application
 db = asyncio.run(Database.connect('server/database/database.db'))
+sio_app = socketio.ASGIApp(sio, app)
+hypercorn_config = hconfig.Config.from_mapping(bind=["localhost:5000"], debug=True)
 
-routes = web.RouteTableDef()
-
-@routes.post('/api/signup')
-async def signup(request):
+@app.route("/api/signup", methods=["POST"])
+async def signup():
     """
     Data example:
     {
@@ -24,35 +26,58 @@ async def signup(request):
         "display_name": "test"
     }
     """
-    data = await request.json()
-    salt=bcrypt.gensalt()
-    password = bcrypt.hashpw(bytes(data['password'], encoding='utf-8'), salt)
-    print(data["dob"])
-    await db.c.execute('''
-        INSERT INTO users (email, username, password, password_salt, displayname, dob)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (data['email'], data['username'], password, salt, data['displayname'], data['dob']))
-    await db.conn.commit()
-    return web.Response(status=200)
+    data = await request.get_json()
+    required_keys = ['username', 'password', 'email', 'dob']
 
-@routes.post('/api/login')
-async def login(request):
+    # Make sure all of the necessary information is supplied by the client
+    if not data or not all(key in data for key in required_keys):
+        return {"status": "error", "message": "Invalid data"}, 401
+    
+    # If there is no display name, set it to the username
+    if not data.get('displayname'):
+        data['displayname'] = data['username']
+
+    # Use bcrypt to hash the password, so it is not stored in plaintext
+    salt = bcrypt.gensalt()
+    password = bcrypt.hashpw(bytes(data['password'], encoding='utf-8'), salt)
+
+    # Insert the user into the database
+    status = await db.create_user(
+        {
+            "username": data['username'],
+            "password": password,
+            "password_salt": salt,
+            "email": data['email'],
+            "displayname": data['displayname'],
+            "dob": data['dob']
+        }
+    )
+
+    return status
+
+@app.route("/api/login", methods=["POST"])
+async def login():
     """
     This request allows a user to get a session token using their username and 
     password combination. This session token will allow the user to connect to 
     the socketIO server.
     """
-    data = await request.json()
+    data = await request.get_json()
+
+    if not data or not data['username'] or not data['password']:
+        return {"status": "error", "message": "Invalid data"}, 401
+
     # Check if the data is valid, if the user exists and whether the password matches after hashing
     # If the user exists and the password matches, return a token 
     await db.c.execute('''
         SELECT * FROM users WHERE username = ?
     ''', (data['username'],))
     user = await db.c.fetchone()
+
     print(user)
 
     if user is None:
-        return web.Response(status=404)
+        return {"status": "error", "message": "User does not exist"}, 401
     
     if bcrypt.checkpw(bytes(data['password'], encoding='utf-8'), user[2]):
         if user[6] is None:
@@ -61,22 +86,18 @@ async def login(request):
                 UPDATE users SET session = ? WHERE username = ?
             ''', (session, data['username']))
             await db.conn.commit()
-            return web.Response(status=200, body=session)
+            return {"status": "success", "session": session}, 200
         
-    return web.Response(status=401)
+    return {"status": "error", "message": "Incorrect password"}, 401
 
-async def authenticate_user(token):
-    """
-    Make sure the session token that the client is trying to connect with exists
-    and is valid.
-    """
-    await db.c.execute('''
-        SELECT * FROM users WHERE session = ?
-    ''', (token,))
-    user = await db.c.fetchone()
+@app.route("/api/user/<username>", methods=["GET"])
+async def get_user(username):
+    user = await db.get_user(username)
+
     if user is None:
-        return False
-    return user[0]
+        return {"status": "error", "message": "User does not exist"}, 401
+    
+    return {"status": "success", "user": user.to_dict()}, 200
 
 @sio.event
 async def connect(sid: str, data: dict, auth: dict):
@@ -86,7 +107,7 @@ async def connect(sid: str, data: dict, auth: dict):
     """
     print("attempting to connect...")
     print(auth)
-    username = await authenticate_user(auth['session'])
+    username = await db.authenticate_user(auth['session'])
     
     if username is False:
         await sio.disconnect(sid)
@@ -102,13 +123,15 @@ async def message(sid, data):
     
     print('message from ', session['username'])
     print(data)
-    await sio.emit('message', data)
 
-app.add_routes([web.post('/api/signup', signup), web.post('/api/login', login)])
+    if not data:
+        return
+
+    await sio.emit('message', data)
 
 if __name__ == "__main__": 
     try:
-        web.run_app(app, host="127.0.0.1")
+        asyncio.run(hasync.serve(sio_app, hypercorn_config))
     except Exception as error:
         raise error
     finally:

@@ -1,3 +1,3 @@
-curl -Uri http://127.0.0.1:8080/api/signup -Method Post -Body '{"username": "test", "password": "test", "email": "test@test.test", "displayname": "test", "dob": "8/9/20"}'
+curl -d '{"username": "test", "password": "test", "email": "test@test.test", "displayname": "test", "dob": "8/9/20"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:5000/api/signup
 
-curl -Uri "http://127.0.0.1:8080/api/login" -Method Post -Body '{"username": "test", "password": "test"}'
+curl -d '{"username": "test", "password": "test"}' -H "Content-Type: application/json" -X POST "http://127.0.0.1:5000/api/login"

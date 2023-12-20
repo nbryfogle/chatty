@@ -2,3 +2,5 @@ python-socketio
 aiohttp
 bcrypt
 aiosqlite
+quart
+hypercorn

@@ -1,0 +1,58 @@
+body {
+    background-color: #777272;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    margin: 2;
+    padding: 7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+#message{
+    /* styles the text box */
+    /*center the message box*/
+    margin: 0 auto;
+    
+    border: 8px solid #ccc;
+    width: 800px;
+    height: 25px;
+    font-size: 16px;
+    padding: 20px;
+    border-radius: 5px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+#messages{
+    /* styles the displayed messages */
+
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 21px;
+    padding: 3px;
+    margin: 3px;
+    color: rgb(91, 44, 122);
+    text-decoration: none;
+}
+
+#sender{ /*styles the send button*/
+    background-color: rgb(98, 67, 170);
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    
+}
+#sender:hover{
+    background-color: rgb(180, 133, 211);
+}

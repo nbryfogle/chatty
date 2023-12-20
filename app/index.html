@@ -3,9 +3,10 @@
     
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
     <script type="text/javascript" src="index.js"></script>
-    <input type="text" id="message" placeholder="Message" onkeydown="onKeyDown()">
+    <link rel="stylesheet" href="style.css">
+    <input type="text" id="message" placeholder="Message">
     <!-- Create a button that calls the sendMessage function-->
-    <button onclick="sendMessage()">Send</button>
-    <div id="messages"></div>
+    <button onclick="sendMessage()" id="sender">Send</button>
+    <div id="messages" ></div>
 
 </html>

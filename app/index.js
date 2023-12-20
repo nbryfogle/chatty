@@ -1,14 +1,15 @@
-const socket = io("http://127.0.0.1:8080/", {
+document.addEventListener("keypress", onEvent);
+
+const socket = io("http://127.0.0.1:5000/", {
     reconnectionDelayMax: 10000,
     auth: {
-        "session": "44492fa2-4826-433c-9900-3ef88b714ac7"
+        "session": "66512422-8050-46a9-a36d-13325f2b4226"
     }
 });
 
 socket.on("connect", () => {
     console.log("connect");
 });
-
 
 socket.on("message", (data) => {
     console.log("Received message from server");
@@ -21,9 +22,9 @@ function sendMessage() {
     document.getElementById("message").value = "";
 }
 
-function onKeyDown(event) {
-    console.log("event.keyCode", event.keyCode);
-    if (event.keyCode == 13) {
+function onEvent(event) {
+    if(event.keyCode=== 13) {
         sendMessage();
     }
 }
+
