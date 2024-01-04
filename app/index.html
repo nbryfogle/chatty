@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-    
+ 
+<body>
+    <h6><span>&copy</span> Copyright, Norwegian Ball Waffles Inc., 2024</h6>
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
     <script type="text/javascript" src="index.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="style.css">
+    <title>Chat App</title>
+    <button id="logout" onclick="logout()">Logout</button>
+
+    <div id="messages" ></div>
     <input type="text" id="message" placeholder="Message">
     <!-- Create a button that calls the sendMessage function-->
     <button onclick="sendMessage()" id="sender">Send</button>
-    <div id="messages" ></div>
-
+</body>
 </html>

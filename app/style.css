@@ -1,3 +1,5 @@
+
+
 body {
     background-color: #777272;
     font-family: 'Roboto', sans-serif;
@@ -11,11 +13,19 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+
+
 #message{
+    justify-items: center;
     /* styles the text box */
     /*center the message box*/
     margin: 0 auto;
-    
+    /* position the text box at the bottom left of the screen */
+    /* position: fixed; */
+    position: sticky;
+    bottom: 0;
+    left: 0;
     border: 8px solid #ccc;
     width: 800px;
     height: 25px;
@@ -29,23 +39,34 @@ body {
 
 #messages{
     /* styles the displayed messages */
-
+    display: flex;
+    flex-direction: column;
+    min-height: 85vh;
+    margin: 0;
+    flex-grow: 1;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: 21px;
     padding: 3px;
     margin: 3px;
     color: rgb(91, 44, 122);
-    text-decoration: none;
+    bottom: 100px ;
+    /* position:fixed; */
+    list-style-type: none;
 }
 
 #sender{ /*styles the send button*/
+    /*place the send button next to the message box*/
+    position: sticky;
+    bottom: 10px;
+    left: 860px;
+    /*style the button*/
     background-color: rgb(98, 67, 170);
-    border: none;
     color: white;
     padding: 15px 32px;
     text-align: center;
     font-size: 16px;
     margin: 4px 2px;
+    border: none;
     cursor: pointer;
     border-radius: 5px;
     -moz-border-radius: 10px;
@@ -55,4 +76,145 @@ body {
 }
 #sender:hover{
     background-color: rgb(180, 133, 211);
+    /*Make the button italic when hovered*/
+    font-style: italic;
+    
+}
+
+#username{
+    
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 21px;
+    padding: 3px;
+    margin: 3px;
+    color: rgb(91, 44, 122);
+    text-decoration: none;
+    border-radius: 10px;
+}   
+#password{
+    
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 21px;
+    padding: 3px;
+    margin: 3px;
+    color: rgb(91, 44, 122);
+    text-decoration: none;
+    border-radius: 10px;
+}
+
+#email{
+        
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        font-size: 21px;
+        padding: 3px;
+        margin: 3px;
+        color: rgb(91, 44, 122);
+        text-decoration: none;
+        border-radius: 10px;
+}
+
+#displayname{
+            
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            font-size: 21px;
+            padding: 3px;
+            margin: 3px;
+            color: rgb(91, 44, 122);
+            text-decoration: none;
+            border-radius: 10px;
+
+}
+
+#signUp:hover{
+    background-color: rgb(180, 133, 211);
+    /*Make the button italic when hovered*/
+    font-style: italic;
+    
+}
+
+#logout{
+    position: relative;
+    bottom: 10px;
+    left: 860px;
+    /*style the button*/
+    background-color: rgb(98, 67, 170);
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+#logout:hover{
+    background-color: rgb(180, 133, 211);
+    /*Make the button italic when hovered*/
+    font-style: italic;
+    
+}
+
+.container button {
+    position: relative;
+    top: 10px;
+    background-color: rgb(98, 67, 170);
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    border: none;
+    border-radius: 5px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.container button:hover{
+    background-color: rgb(180, 133, 211);
+    font-style: italic;
+    cursor: pointer;
+}
+
+.container{
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 21px;
+    padding: 20px;
+    color: rgb(91, 44, 122);
+    bottom: 100px ;
+    align-items: center;
+    justify-content: center;
+}
+
+.container input {
+    width: 50%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 2px solid rgb(98, 67, 170);
+    font-size: 16px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.container a {
+    padding-top: 20px;
+}
+
+.container a:hover {
+    color:orange;
+    font-style: italic;
+}
+
+h1 {
+    font-size: 50px;
+    color: rgb(98, 67, 170);
+    text-align: center;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }

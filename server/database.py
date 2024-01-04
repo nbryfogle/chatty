@@ -47,10 +47,20 @@ class Database:
                 creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        # Make the timestamp the current time in EST
+        await db.c.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message TEXT NOT NULL,
+                author TEXT NOT NULL,
+                channel TEXT NOT NULL,
+                timestamp TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime'))
+            )
+        ''')
         await db.conn.commit()
         return db
 
-    async def authenticate_user(self, token: str) -> bool | aiosqlite.Row:
+    async def authenticate_user(self, token: str) -> bool | str:
         """
         Make sure the session token that the client is trying to connect with exists
         and is valid.
@@ -63,7 +73,7 @@ class Database:
         if user is None:
             return False
         
-        return user[0]
+        return user["displayname"] or user["username"]
 
     async def check_user_exists(self, username: str) -> bool:
         """
@@ -128,3 +138,25 @@ class Database:
             return None
         
         return User(dict(user))
+
+    async def capture_message(self, username: str, message_content: str) -> None:
+        """
+        Capture a message from a user and store it in the database.
+        """
+        await self.c.execute('''
+            INSERT INTO messages (message, author, channel)
+            VALUES (?, ?, ?)
+        ''', (message_content, username, "general"))
+        await self.conn.commit()     
+
+    async def get_messages(self, amount: int = 20) -> list[dict]:
+        """
+        Get the last 10 messages from the database.
+        """
+        await self.c.execute('''
+            SELECT * FROM messages ORDER BY id DESC LIMIT ?
+        ''', (amount,))
+        messages = await self.c.fetchall()
+
+        return [dict(message) for message in messages][::-1]
+    

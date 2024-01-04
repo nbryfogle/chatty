@@ -4,3 +4,4 @@ bcrypt
 aiosqlite
 quart
 hypercorn
+quart-cors
