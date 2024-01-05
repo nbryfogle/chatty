@@ -24,6 +24,26 @@ class User:
     def __repr__(self):
         return f"<User {self.username}>"
 
+class Message:
+    def __init__(self, data: dict):
+        self.id = data.get('id', None)
+        self.message = data.get('message', None)
+        self.author = data.get('author', None)
+        self.channel = data.get('channel', None)
+        self.timestamp = data.get('timestamp', None)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "message": self.message,
+            "author": self.author,
+            "channel": self.channel,
+            "timestamp": self.timestamp
+        }
+
+    def __repr__(self):
+        return f"<Message {self.id}>"
+
 class Database:
     def __init__(self):
         self.conn: aiosqlite.Connection
@@ -73,7 +93,7 @@ class Database:
         if user is None:
             return False
         
-        return user["displayname"] or user["username"]
+        return user["username"]
 
     async def check_user_exists(self, username: str) -> bool:
         """

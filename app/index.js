@@ -1,4 +1,4 @@
-const BASE_URL = "127.0.0.1:5000/";
+const BASE_URL = "https://supreme-space-cod-559xx465xr6h4vr5-5000.app.github.dev/";
 
 document.addEventListener("keypress", onEvent);
   
@@ -50,7 +50,12 @@ socket.on("previous_messages", (data) => {
 socket.on("message", (data) => {
     console.log("Received message from server");
     console.log(data);
-    $("#messages").append(`<li>${data.username} at ${data.time}: ${data.message}</li>`);
+
+    if (data.type === "command") {
+        $("#messages").append(`<li>${data.username} ${data.message}</li>`);
+    } else {
+        $("#messages").append(`<li>${data.username} at ${data.time}: ${data.message}</li>`);
+    }
     $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
 });
 

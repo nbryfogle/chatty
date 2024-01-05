@@ -2,12 +2,13 @@ from quart import Quart, request
 from quart_cors import cors
 import socketio
 import bcrypt
-from database import Database
+from database import Database, Message
 import asyncio
 from uuid import uuid4
 import hypercorn.asyncio as hasync
 import hypercorn.config as hconfig
 import datetime
+from commands import process_command
 
 sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='asgi')
 app = Quart(__name__, instance_relative_config=True)
@@ -126,14 +127,21 @@ async def connect(sid: str, data: dict, auth: str):
         await sio.disconnect(sid)
         return
 
+    user = await db.get_user(username)
+
+    if user is None:
+        await sio.disconnect(sid)
+        return
+
     messages = await db.get_messages()
 
-    await sio.save_session(sid, {'username': username})
+    await sio.save_session(sid, {'username': user.username})
     await sio.emit('previous_messages', {"messages": messages}, to=sid)
     await sio.emit('message', {
-        'message': f'{username} has connected', 
+        'message': f'{user.username} has connected as {user.displayname}', 
         'username': 'Server',
-        'time': datetime.datetime.now().strftime("%H:%M:%S")
+        'time': datetime.datetime.now().strftime("%H:%M:%S"),
+        'type': 'user_connect'
         })
 
     print('connect ', sid)
@@ -171,11 +179,41 @@ async def message(sid, data):
             )
         return
     
-    await db.capture_message(session['username'], data)
+    user = await db.get_user(session['username'])
+
+    if user is None:
+        return
+
+    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
+    if data.startswith(':'):
+        message = await process_command(db, data, user)
+
+        if message is None:
+            await sio.emit('message', {
+                'message': 'Invalid command or mention.', 
+                'username': 'Server',
+                'time': current_time,
+                'type': 'error',
+                },
+                to=sid
+            )
+
+        else:
+            await sio.emit('message', {
+                "message": message,
+                "username": user.displayname,
+                "time": current_time,
+                "type": "command",
+            })
+        return
+
+    await db.capture_message(user.displayname, data)
     await sio.emit('message', {
         'message': data, 
-        'username': session['username'],
-        'time': datetime.datetime.now().strftime("%H:%M:%S")
+        'username': user.displayname,
+        'time': current_time,
+        'type': 'message',
         })
 
 if __name__ == "__main__": 
