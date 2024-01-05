@@ -1,5 +1,9 @@
 import random
-from database import User, Database
+from typing import TYPE_CHECKING
+from database import Database
+
+if TYPE_CHECKING:
+    from objects import User
 
 async def get_user_from_mention(db: Database, message: str) -> User | None:
     """

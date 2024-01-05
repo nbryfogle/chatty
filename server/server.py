@@ -2,7 +2,8 @@ from quart import Quart, request
 from quart_cors import cors
 import socketio
 import bcrypt
-from database import Database, Message
+from database import Database
+from objects import Permissions
 import asyncio
 from uuid import uuid4
 import hypercorn.asyncio as hasync
@@ -187,6 +188,16 @@ async def message(sid, data):
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
     if data.startswith(':'):
+        if not user.permissions & Permissions.COMMANDS:
+            await sio.emit('message', {
+                'message': 'You do not have permission to send commands.', 
+                'username': 'Server',
+                'time': datetime.datetime.now().strftime("%H:%M:%S"),
+                'type': 'error',
+                },
+                to=sid
+            )
+            return
         message = await process_command(db, data, user)
 
         if message is None:
@@ -208,6 +219,17 @@ async def message(sid, data):
             })
         return
 
+    if not user.permissions & Permissions.SEND:
+        await sio.emit('message', {
+            'message': 'You do not have permission to send messages.', 
+            'username': 'Server',
+            'time': datetime.datetime.now().strftime("%H:%M:%S"),
+            'type': 'error',
+            },
+            to=sid
+        )
+        return
+    
     await db.capture_message(user.displayname, data)
     await sio.emit('message', {
         'message': data, 
