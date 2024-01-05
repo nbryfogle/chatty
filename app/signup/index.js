@@ -1,3 +1,5 @@
+const BASE_URL = "127.0.0.1:5000/";
+
 if (document.cookie.includes("token") && document.cookie.split("token=")[1].split(";")[0] !== "") {
     window.location.replace("/app");
 }
@@ -20,7 +22,7 @@ function signUp() {
     };
 
     console.log(body);
-    fetch("http://127.0.0.1:5000/api/signup", {
+    fetch(BASE_URL + "/api/signup", {
         method: "POST",
         // Get the values from the form
         body: JSON.stringify(body),

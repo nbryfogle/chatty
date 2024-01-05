@@ -1,3 +1,5 @@
+const BASE_URL = "127.0.0.1:5000/";
+
 document.addEventListener("keypress", onEvent);
   
 function getCookie(cname) {
@@ -27,7 +29,7 @@ if (!getCookie("token")) {
     console.log("No token found");
 }
 
-const socket = io("http://127.0.0.1:5000/", {
+const socket = io(BASE_URL, {
     reconnectionDelayMax: 10000,
     auth: getCookie("token"),
 });
@@ -49,6 +51,7 @@ socket.on("message", (data) => {
     console.log("Received message from server");
     console.log(data);
     $("#messages").append(`<li>${data.username} at ${data.time}: ${data.message}</li>`);
+    $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
 });
 
 function sendMessage() {

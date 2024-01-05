@@ -2,7 +2,7 @@ from quart import Quart, request
 from quart_cors import cors
 import socketio
 import bcrypt
-from database import Database, User
+from database import Database
 import asyncio
 from uuid import uuid4
 import hypercorn.asyncio as hasync
@@ -19,7 +19,7 @@ sio_app = socketio.ASGIApp(sio, app)
 hypercorn_config = hconfig.Config.from_mapping(bind=["localhost:5000"], debug=True)
 
 @app.route("/api/signup", methods=["POST"])
-async def signup():
+async def signup() -> tuple[dict[str, str], int]:
     """
     Data example:
     {
@@ -62,7 +62,7 @@ async def signup():
     return status
 
 @app.route("/api/login", methods=["POST"])
-async def login():
+async def login() -> tuple[dict[str, str], int]:
     """
     This request allows a user to get a session token using their username and 
     password combination. This session token will allow the user to connect to 
@@ -99,7 +99,7 @@ async def login():
     return {"status": "error", "message": "Incorrect password"}, 401
 
 @app.route("/api/user/<username>", methods=["GET"])
-async def get_user(username):
+async def get_user(username) -> tuple[dict[str, str | dict], int]:
     user = await db.get_user(username)
 
     if user is None:
