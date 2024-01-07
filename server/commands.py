@@ -1,73 +1,71 @@
-"""
-Commands.py holds all of the commands and command-based interactions
-to use within the chat.
-"""
-
 import random
-from typing import TYPE_CHECKING
+from database import User, Database
 
-if TYPE_CHECKING:
-    from objects import User
-    from database import Database
-
-
-async def get_user_from_mention(db: "Database", message: str) -> "User | None":
+async def get_user_from_mention(db: Database, message: str) -> User | None:
     """
     Get a mention of a user.
     """
-    for word in message.split(" "):
-        if word.startswith("@"):
+    for word in message.split(' '):
+        if word.startswith('@'):
             user = await db.get_user(word[1:])
             if user is None:
                 return None
-
+            
             return user
-
+        
     return None
 
 
-async def process_command(db: "Database", message: str, user: "User") -> str | None:
+async def process_command(db: Database, message: str, user: User) -> str | None:
     """
     Process a command that is sent by a user.
     """
-    match message.split(" ")[0].strip(":"):
+    match message.split(' ')[0].strip(":"):
         case "bonk":
             to_bonk = await get_user_from_mention(db, message)
 
             if to_bonk is None:
                 return None
-
+            
             message = await bonk(to_bonk)
 
             return message
+        
+        # case "suck":
+        #     to_suck = await get_user_from_mention(db, message)
 
-        case "suck":
-            to_suck = await get_user_from_mention(db, message)
+        #     if to_suck is None:
+        #         return None
+            
+        #     message = await suck(to_suck)
 
-            if to_suck is None:
-                return None
-
-            message = await suck(to_suck)
-
-            return message
-
+        #     return message
+        
         case "squiddy":
             to_squid = await get_user_from_mention(db, message)
 
             if to_squid is None:
                 return None
-
-            message = await suck(to_squid)
+            
+            message = await squiddy(to_squid)
 
             return message
+        
+        case "kwispy":
+            to_kwispy = await get_user_from_mention(db, message)
 
+            if to_kwispy is None:
+                return None
+            
+            message = await kwispy(to_kwispy)
+
+            return message
+        
+        
     return None
 
 
-async def bonk(user: "User") -> str:
-    """
-    Message command that sends a message to "bonk" a user.
-    """
+async def bonk(user: User) -> str:
     bonk_messages = [
         "bonks {} on the head",
         "breaks {}'s kneecaps",
@@ -86,21 +84,27 @@ async def bonk(user: "User") -> str:
     return random.choice(bonk_messages).format(user.displayname)
 
 
-async def suck(user: "User") -> str:
-    """
-    Message command that sends a message to "suck" a user.
-    """
-    suck_messages = [
-        "sucks off {}",
-    ]
+# async def suck(user: User) -> str:
+#     suck_messages = [
+#         "sucks off {}",
+#     ]
 
-    return random.choice(suck_messages).format(user.displayname)
+    # return random.choice(suck_messages).format(user.displayname)
 
-
-async def squiddy(user: "User") -> str:
-    """
-    Message command that sends a quote from Squidward to a user.
-    """
+async def squiddy(user:User) -> str:
     squid_mess = [
-        "NOVEMBER 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! {}, YOUR RECKONING WILL BEFALL YOU!",
+        ": AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! {}, YOUR RECKONING WILL BEFALL UPON YOU!",
     ]
+
+    return random.choice(squid_mess).format(user.displayname)
+
+async def kwispy(user:User) -> str:
+    kwispy_mess = [
+        "sets {} on fire.",
+        "sets {} alight with his magic butane blaster.",
+        "introduces {} to the complex process of combustion.",
+        "proceeds to melt {}'s face off.",
+        "lights {} on fire with some good ol' fasioned matches.",
+    ]
+
+    return random.choice(kwispy_mess).format(user.displayname)

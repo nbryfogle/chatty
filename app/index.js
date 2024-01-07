@@ -1,4 +1,4 @@
-const BASE_URL = "https://supreme-space-cod-559xx465xr6h4vr5-5000.app.github.dev/";
+const BASE_URL = "https://scaling-sniffle-pv5p4r4qwvjh75q4-5000.app.github.dev/";
 
 document.addEventListener("keypress", onEvent);
   
