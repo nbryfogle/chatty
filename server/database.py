@@ -1,13 +1,25 @@
+"""
+Database.py holds all of the database interactions.
+"""
+
 import aiosqlite
-from objects import User, Permissions
+from objects import Permissions, User
+
 
 class Database:
+    """
+    The main database class. 
+    This class controls all database interactions.
+    """
     def __init__(self) -> None:
         self.conn: aiosqlite.Connection
-        self.c: aiosqlite.Cursor 
+        self.c: aiosqlite.Cursor
 
     @classmethod
     async def connect(cls, path: str) -> 'Database':
+        """
+        Connect to the database.
+        """
         db = cls()
         db.conn = await aiosqlite.connect(path)
         db.conn.row_factory = aiosqlite.Row
@@ -38,7 +50,7 @@ class Database:
         await db.conn.commit()
         return db
 
-    async def authenticate_user(self, token: str) -> bool | str:
+    async def authenticate_user(self, token: str) -> None | str:
         """
         Make sure the session token that the client is trying to connect with exists
         and is valid.
@@ -48,10 +60,7 @@ class Database:
         ''', (token,))
         user = await self.c.fetchone()
 
-        if user is None:
-            return False
-        
-        return user["username"]
+        return user if user is None else user["username"]
 
     async def check_user_exists(self, username: str) -> bool:
         """
@@ -64,7 +73,7 @@ class Database:
         if user is None:
             return False
         return True
-    
+
     async def check_email_exists(self, email: str) -> bool:
         """
         Check if a user exists in the database.

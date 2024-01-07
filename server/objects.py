@@ -1,6 +1,15 @@
+"""
+Objects.py holds a variety of objects that are used in the app,
+such as the User object and the Message object.
+"""
+
 from enum import Flag
 
 class Permissions(Flag):
+    """
+    Flag enum to control what permissions a user
+    may have.
+    """
     READ = 1
     SEND = 2
     EDIT = 4
@@ -12,6 +21,9 @@ class Permissions(Flag):
 
 
 class User:
+    """
+    User object to store user data.
+    """
     def __init__(self, data: dict):
         self.email: str = data.get('email', None)
         self.username: str = data.get('username', None)
@@ -24,6 +36,10 @@ class User:
         self.permissions: Permissions = Permissions(data.get('permissions', None))
 
     def to_dict(self) -> dict:
+        """
+        Serialize the user object into JSON format, 
+        to be sent to the client.
+        """
         return {
             "email": self.email,
             "username": self.username,
@@ -39,6 +55,9 @@ class User:
 
 
 class Message:
+    """
+    Message object to store message data.
+    """
     def __init__(self, data: dict):
         self.id: int = data.get('id', None)
         self.message: str = data.get('message', None)
@@ -47,6 +66,10 @@ class Message:
         self.timestamp: str = data.get('timestamp', None)
 
     def to_dict(self) -> dict:
+        """
+        Serialize the message object into JSON format,
+        to be sent to the client.
+        """
         return {
             "id": self.id,
             "message": self.message,
