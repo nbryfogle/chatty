@@ -1,4 +1,4 @@
-const BASE_URL = "https://potential-space-broccoli-v4jq9v97wg7hpq4v-5000.app.github.dev/";
+const BASE_URL = "https://scaling-sniffle-pv5p4r4qwvjh75q4-5000.app.github.dev/";
 
 document.addEventListener("keypress", onEvent);
 
