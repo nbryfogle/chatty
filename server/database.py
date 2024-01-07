@@ -34,7 +34,7 @@ class Database:
                 dob TEXT NOT NULL,
                 session TEXT NULL,
                 creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                permissions INTEGER DEFAULT 0
+                permissions INTEGER DEFAULT 67
             )
         ''')
         # Make the timestamp the current time in EST
@@ -113,7 +113,7 @@ class Database:
             data['password_salt'], 
             data['displayname'], 
             data['dob'],
-            Permissions.READ | Permissions.SEND | Permissions.EDIT 
+            (Permissions.READ | Permissions.SEND | Permissions.COMMANDS).value 
             ))
 
         await self.conn.commit()
