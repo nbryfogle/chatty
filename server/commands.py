@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from database import Database
 
 
-async def get_user_from_mention(db: "Database", message: str) -> "User" | None:
+async def get_user_from_mention(db: "Database", message: str) -> "User | None":
     """
     Get a mention of a user.
     """
