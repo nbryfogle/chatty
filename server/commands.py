@@ -61,7 +61,14 @@ async def process_command(db: Database, message: str, user: User) -> str | None:
 
             return message
         
-        
+        case "chirp":
+            chirping = await get_user_from_mention(db,message)
+
+            if chirping is None:
+                return None
+            message = await chirp(chirping)
+            return message
+
     return None
 
 
