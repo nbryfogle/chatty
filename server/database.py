@@ -34,7 +34,7 @@ class Database:
                 dob TEXT NOT NULL,
                 session TEXT NULL,
                 creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                permissions INTEGER DEFAULT 67
+                permissions INTEGER DEFAULT 71
             )
         ''')
         # Make the timestamp the current time in EST
