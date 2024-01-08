@@ -117,6 +117,15 @@ class Database:
         
         return User(dict(user))
 
+    async def update_user(self, user: User) -> None:
+        """
+        Update a user's data in the database.
+        """
+        await self.c.execute('''
+            UPDATE users SET email = ?, username = ?, password = ?, password_salt = ?, displayname = ?, dob = ?, session = ?, permissions = ? WHERE username = ?
+        ''', (user.email, user.username, user.password, user.password_salt, user.displayname, user.dob, user.session, user.permissions.value, user.username))
+        await self.conn.commit()
+
     async def capture_message(self, username: str, message_content: str) -> None:
         """
         Capture a message from a user and store it in the database.

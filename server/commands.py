@@ -1,7 +1,11 @@
 import random
-from database import User, Database
+from typing import TYPE_CHECKING
+from objects import Permissions, User
 
-async def get_user_from_mention(db: Database, message: str) -> User | None:
+if TYPE_CHECKING:
+    from database import Database
+
+async def get_user_from_mention(db: "Database", message: str) -> "User | None":
     """
     Get a mention of a user.
     """
@@ -16,7 +20,7 @@ async def get_user_from_mention(db: Database, message: str) -> User | None:
     return None
 
 
-async def process_command(db: Database, message: str, user: User) -> str | None:
+async def process_command(db: "Database", message: str, user: "User") -> str | None:
     """
     Process a command that is sent by a user.
     """
@@ -59,6 +63,17 @@ async def process_command(db: Database, message: str, user: User) -> str | None:
             message = await chirp(chirping)
             return message
 
+        case "ban":
+            if not user.permissions & Permissions.BAN:
+                return None
+            
+            to_ban = await get_user_from_mention(db, message)
+
+            if to_ban is None:
+                return None
+            
+            return await ban(db, to_ban)
+
     return None
 
 
@@ -81,19 +96,13 @@ async def bonk(user: User) -> str:
     return random.choice(bonk_messages).format(user.displayname)
 
 
-# async def suck(user: User) -> str:
-#     suck_messages = [
-#         "sucks off {}",
-#     ]
-
-    # return random.choice(suck_messages).format(user.displayname)
-
-async def squiddy(user:User) -> str:
+async def squiddy(user: User) -> str:
     squid_mess = [
         ": AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! {}, YOUR RECKONING WILL BEFALL UPON YOU!",
     ]
 
     return random.choice(squid_mess).format(user.displayname)
+
 
 async def kwispy(user:User) -> str:
     kwispy_mess = [
@@ -114,3 +123,8 @@ async def chirp(user:User) -> str:
 
     return random.choice(chirpmess).format(user.displayname)
 
+async def ban(db: "Database", user: User) -> str:
+    user.permissions = Permissions(0)
+    await db.update_user(user)
+
+    return f"Banned {user.displayname}."
