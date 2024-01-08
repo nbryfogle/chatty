@@ -1,4 +1,6 @@
-const BASE_URL = "https://supreme-space-cod-559xx465xr6h4vr5-5000.app.github.dev/";
+const BASE_URL = "https://scaling-sniffle-pv5p4r4qwvjh75q4-5000.app.github.dev/";
+
+document.addEventListener("keypress", onEvent);
 
 if (document.cookie.includes("token") && document.cookie.split("token=")[1].split(";")[0] !== "") {
     window.location.replace("/app");
@@ -30,4 +32,10 @@ function login() {
         console.error("Error:", error);
         alert("Error logging in: " + error);
     });
+}
+
+function onEvent(event) {
+    if(event.keyCode=== 13) {
+        login();
+    }
 }
