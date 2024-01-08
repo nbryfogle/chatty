@@ -1,5 +1,6 @@
 import random
-from database import User, Database
+from database import Database
+from objects import User, Permissions
 
 help_mes = """
 Current commands: (* = required argument)
@@ -11,32 +12,34 @@ Current commands: (* = required argument)
 :suck @username* - REDACTED
 
 """
+
+
 async def get_user_from_mention(db: Database, message: str) -> User | None:
     """
     Get a mention of a user.
     """
-    for word in message.split(' '):
-        if word.startswith('@'):
+    for word in message.split(" "):
+        if word.startswith("@"):
             user = await db.get_user(word[1:])
             if user is None:
                 return None
-            
+
             return user
-        
+
     return None
 
 
-async def process_command(db: Database, message: str, user: User) -> str | None:
+async def process_command(db: "Database", message: str, user: "User") -> str | None:
     """
     Process a command that is sent by a user.
     """
-    match message.split(' ')[0].strip(":"):
+    match message.split(" ")[0].strip(":"):
         case "bonk":
             to_bonk = await get_user_from_mention(db, message)
 
             if to_bonk is None:
                 return None
-            
+
             message = await bonk(to_bonk)
 
             return message
@@ -46,23 +49,23 @@ async def process_command(db: Database, message: str, user: User) -> str | None:
 
             if to_squid is None:
                 return None
-            
+
             message = await squiddy(to_squid)
 
             return message
-        
+
         case "kwispy":
             to_kwispy = await get_user_from_mention(db, message)
 
             if to_kwispy is None:
                 return None
-            
+
             message = await kwispy(to_kwispy)
 
             return message
-        
+
         case "chirp":
-            chirping = await get_user_from_mention(db,message)
+            chirping = await get_user_from_mention(db, message)
 
             if chirping is None:
                 return None
@@ -71,6 +74,39 @@ async def process_command(db: Database, message: str, user: User) -> str | None:
         case "help":
             message = help_mes
             return message
+
+        case "ban":
+            if not user.permissions & Permissions.BAN:
+                return None
+
+            to_ban = await get_user_from_mention(db, message)
+
+            if to_ban is None:
+                return None
+
+            return await ban(db, to_ban)
+
+        case "ban":
+            if not user.permissions & Permissions.BAN:
+                return None
+
+            to_ban = await get_user_from_mention(db, message)
+
+            if to_ban is None:
+                return None
+
+            return await ban(db, to_ban)
+
+        case "ban":
+            if not user.permissions & Permissions.BAN:
+                return None
+
+            to_ban = await get_user_from_mention(db, message)
+
+            if to_ban is None:
+                return None
+
+            return await ban(db, to_ban)
 
     return None
 
@@ -94,21 +130,15 @@ async def bonk(user: User) -> str:
     return random.choice(bonk_messages).format(user.displayname)
 
 
-# async def suck(user: User) -> str:
-#     suck_messages = [
-#         "sucks off {}",
-#     ]
-
-    # return random.choice(suck_messages).format(user.displayname)
-
-async def squiddy(user:User) -> str:
+async def squiddy(user: User) -> str:
     squid_mess = [
         ": AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! {}, YOUR RECKONING WILL BEFALL UPON YOU!",
     ]
 
     return random.choice(squid_mess).format(user.displayname)
 
-async def kwispy(user:User) -> str:
+
+async def kwispy(user: User) -> str:
     kwispy_mess = [
         "sets {} on fire.",
         "sets {} alight with his magic butane blaster.",
@@ -119,13 +149,18 @@ async def kwispy(user:User) -> str:
 
     return random.choice(kwispy_mess).format(user.displayname)
 
-async def chirp(user:User) -> str:
+
+async def chirp(user: User) -> str:
     chirpmess = [
         "Hey {}, why don't ya skate, ya pheasant!?",
-        "Hey {}, I've seen better hands on a digital clock!"
+        "Hey {}, I've seen better hands on a digital clock!",
     ]
 
     return random.choice(chirpmess).format(user.displayname)
 
 
+async def ban(db: "Database", user: User) -> str:
+    user.permissions = Permissions(0)
+    await db.update_user(user)
 
+    return f"Banned {user.displayname}."

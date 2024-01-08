@@ -150,7 +150,7 @@ async def connect(sid: str, data: dict, auth: str):
 
     user = await db.get_user(username)
 
-    if user is None:
+    if user is None or user.permissions.value == 0:
         await sio.disconnect(sid)
         return
 
