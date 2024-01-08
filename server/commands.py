@@ -30,17 +30,7 @@ async def process_command(db: Database, message: str, user: User) -> str | None:
             message = await bonk(to_bonk)
 
             return message
-        
-        # case "suck":
-        #     to_suck = await get_user_from_mention(db, message)
 
-        #     if to_suck is None:
-        #         return None
-            
-        #     message = await suck(to_suck)
-
-        #     return message
-        
         case "squiddy":
             to_squid = await get_user_from_mention(db, message)
 
