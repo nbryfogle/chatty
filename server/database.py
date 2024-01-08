@@ -1,25 +1,56 @@
-"""
-Database.py holds all of the database interactions.
-"""
-
 import aiosqlite
-from objects import Permissions, User
 
+class User:
+    def __init__(self, data: dict):
+        self.email = data.get('email', None)
+        self.username = data.get('username', None)
+        self.password = data.get('password', None)
+        self.password_salt = data.get('password_salt', None)
+        self.displayname = data.get('displayname', None)
+        self.dob = data.get('dob', None)
+        self.session = data.get('session', None)
+        self.creation_date = data.get('creation_date', None)
+
+    def to_dict(self) -> dict:
+        return {
+            "email": self.email,
+            "username": self.username,
+            "displayname": self.displayname,
+            "dob": self.dob,
+            "session": self.session,
+            "creation_date": self.creation_date
+        }
+
+    def __repr__(self):
+        return f"<User {self.username}>"
+
+class Message:
+    def __init__(self, data: dict):
+        self.id = data.get('id', None)
+        self.message = data.get('message', None)
+        self.author = data.get('author', None)
+        self.channel = data.get('channel', None)
+        self.timestamp = data.get('timestamp', None)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "message": self.message,
+            "author": self.author,
+            "channel": self.channel,
+            "timestamp": self.timestamp
+        }
+
+    def __repr__(self):
+        return f"<Message {self.id}>"
 
 class Database:
-    """
-    The main database class. 
-    This class controls all database interactions.
-    """
-    def __init__(self) -> None:
+    def __init__(self):
         self.conn: aiosqlite.Connection
-        self.c: aiosqlite.Cursor
+        self.c: aiosqlite.Cursor 
 
     @classmethod
     async def connect(cls, path: str) -> 'Database':
-        """
-        Connect to the database.
-        """
         db = cls()
         db.conn = await aiosqlite.connect(path)
         db.conn.row_factory = aiosqlite.Row
@@ -33,8 +64,12 @@ class Database:
                 displayname TEXT NOT NULL,
                 dob TEXT NOT NULL,
                 session TEXT NULL,
+<<<<<<< HEAD
                 creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 permissions INTEGER DEFAULT 71
+=======
+                creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+>>>>>>> Scaling-sniffle-branch
             )
         ''')
         # Make the timestamp the current time in EST
@@ -50,7 +85,7 @@ class Database:
         await db.conn.commit()
         return db
 
-    async def authenticate_user(self, token: str) -> None | str:
+    async def authenticate_user(self, token: str) -> bool | str:
         """
         Make sure the session token that the client is trying to connect with exists
         and is valid.
@@ -60,7 +95,10 @@ class Database:
         ''', (token,))
         user = await self.c.fetchone()
 
-        return user if user is None else user["username"]
+        if user is None:
+            return False
+        
+        return user["username"]
 
     async def check_user_exists(self, username: str) -> bool:
         """
@@ -73,7 +111,7 @@ class Database:
         if user is None:
             return False
         return True
-
+    
     async def check_email_exists(self, email: str) -> bool:
         """
         Check if a user exists in the database.
@@ -104,17 +142,9 @@ class Database:
             return {"status": "error", "message": "Email is already in use."}, 401
         
         await self.c.execute('''
-            INSERT INTO users (email, username, password, password_salt, displayname, dob, permissions)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            data['email'], 
-            data['username'], 
-            data['password'], 
-            data['password_salt'], 
-            data['displayname'], 
-            data['dob'],
-            (Permissions.READ | Permissions.SEND | Permissions.COMMANDS).value 
-            ))
+            INSERT INTO users (email, username, password, password_salt, displayname, dob)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (data['email'], data['username'], data['password'], data['password_salt'], data['displayname'], data['dob']))
 
         await self.conn.commit()
 
