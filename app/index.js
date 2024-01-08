@@ -1,4 +1,4 @@
-const BASE_URL = "https://scaling-sniffle-pv5p4r4qwvjh75q4-5000.app.github.dev/";
+const BASE_URL = window.location.origin.replace("3000", "5000") + "/";
 
 document.addEventListener("keypress", onEvent);
   
