@@ -48,6 +48,7 @@ body {
     bottom: 100px ;
     /* position:fixed; */
     list-style-type: none;
+    text-rendering: optimizeLegibility;
 }
 
 .controlButton { /*styles the send button*/
@@ -200,5 +201,8 @@ h1 {
     -webkit-text-stroke: #212529 2px;
 }
 
-
+h6{
+    text-rendering: optimizeLegibility;
+    
+}
 
