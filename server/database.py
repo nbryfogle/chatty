@@ -64,12 +64,8 @@ class Database:
                 displayname TEXT NOT NULL,
                 dob TEXT NOT NULL,
                 session TEXT NULL,
-<<<<<<< HEAD
                 creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 permissions INTEGER DEFAULT 71
-=======
-                creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
->>>>>>> Scaling-sniffle-branch
             )
         ''')
         # Make the timestamp the current time in EST
