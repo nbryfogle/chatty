@@ -1,48 +1,5 @@
 import aiosqlite
-
-class User:
-    def __init__(self, data: dict):
-        self.email = data.get('email', None)
-        self.username = data.get('username', None)
-        self.password = data.get('password', None)
-        self.password_salt = data.get('password_salt', None)
-        self.displayname = data.get('displayname', None)
-        self.dob = data.get('dob', None)
-        self.session = data.get('session', None)
-        self.creation_date = data.get('creation_date', None)
-
-    def to_dict(self) -> dict:
-        return {
-            "email": self.email,
-            "username": self.username,
-            "displayname": self.displayname,
-            "dob": self.dob,
-            "session": self.session,
-            "creation_date": self.creation_date
-        }
-
-    def __repr__(self):
-        return f"<User {self.username}>"
-
-class Message:
-    def __init__(self, data: dict):
-        self.id = data.get('id', None)
-        self.message = data.get('message', None)
-        self.author = data.get('author', None)
-        self.channel = data.get('channel', None)
-        self.timestamp = data.get('timestamp', None)
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "message": self.message,
-            "author": self.author,
-            "channel": self.channel,
-            "timestamp": self.timestamp
-        }
-
-    def __repr__(self):
-        return f"<Message {self.id}>"
+from objects import User
 
 class Database:
     def __init__(self):
@@ -81,7 +38,7 @@ class Database:
         await db.conn.commit()
         return db
 
-    async def authenticate_user(self, token: str) -> bool | str:
+    async def authenticate_user(self, token: str) -> None | str:
         """
         Make sure the session token that the client is trying to connect with exists
         and is valid.
@@ -92,7 +49,7 @@ class Database:
         user = await self.c.fetchone()
 
         if user is None:
-            return False
+            return None
         
         return user["username"]
 
