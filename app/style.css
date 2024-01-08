@@ -196,9 +196,9 @@ h1 {
     color: rgb(98, 67, 170);
     text-align: center;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-}
-
-#t{
     text-rendering: optimizeLegibility;
     -webkit-text-stroke: #212529 2px;
 }
+
+
+

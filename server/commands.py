@@ -108,3 +108,12 @@ async def kwispy(user:User) -> str:
     ]
 
     return random.choice(kwispy_mess).format(user.displayname)
+
+async def chirp(user:User) -> str:
+    chirpmess = [
+        "Hey {}, why don't ya skate, ya pheasant!?",
+        "Hey {}, I've seen better hands on a digital clock!"
+    ]
+
+    return random.choice(chirpmess).format(user.displayname)
+
