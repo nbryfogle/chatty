@@ -1,6 +1,16 @@
 import random
 from database import User, Database
 
+help_mes = """
+Current commands: (* = required argument)
+:help - this command, the very one you just used
+:bonk @username* - sends a wonderful message of cartoonish violence
+:kwispy @username* - Pyromaniacal version of :bonk
+:squiddy @username* - Meh, better if you figure this one out on your own...
+:chirp @username* - Deliver a good old-fasioned ice hockey chirp to one of your buddies
+:suck @username* - REDACTED
+
+"""
 async def get_user_from_mention(db: Database, message: str) -> User | None:
     """
     Get a mention of a user.
@@ -58,6 +68,9 @@ async def process_command(db: Database, message: str, user: User) -> str | None:
                 return None
             message = await chirp(chirping)
             return message
+        case "help":
+            message = help_mes
+            return message
 
     return None
 
@@ -113,4 +126,6 @@ async def chirp(user:User) -> str:
     ]
 
     return random.choice(chirpmess).format(user.displayname)
+
+
 
