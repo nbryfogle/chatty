@@ -70,11 +70,11 @@ async def bonk(ctx: Context) -> Message | None:
         
 @command("help", "Get help. Usage: :help")
 async def help(ctx: Context) -> Message | None:
-    content = "\n".join(f"{cmd.name} - {cmd.description}" for cmd in command_register)
+    content = "<br/>".join(f"{cmd.name} - {cmd.description}" for cmd in command_register)
 
     #if ctx.first_mention:
         #return None
-    
+
     return command_msg(content)
 
 @command("squiddy", "Send a squidward quote. Usage: :squiddy @username")

@@ -45,6 +45,7 @@ socket.on("previous_messages", (data) => {
     for (let i = 0; i < data.length; i++) {
         $("#messages").append(`<li>${data[i].author} at ${data[i].timestamp.split(" ")[1]}: ${data[i].message}</li>`);
     } // end
+    $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
 });
 
 socket.on("message", (data) => {
