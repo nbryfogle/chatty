@@ -1,8 +1,15 @@
+"""
+Commands.py holds all there ever was, is, and will be regarding commands.
+Commands allow a user to interact with the system-side of the program, or just
+have fun with some funny messages.
+"""
+
 import random
 from database import Database
 from objects import User, Permissions
 
-help_mes = """
+
+HELP_MSG = """
 Current commands: (* = required argument)
 :help - this command, the very one you just used
 :bonk @username* - sends a wonderful message of cartoonish violence
@@ -10,7 +17,6 @@ Current commands: (* = required argument)
 :squiddy @username* - Meh, better if you figure this one out on your own...
 :chirp @username* - Deliver a good old-fasioned ice hockey chirp to one of your buddies
 :suck @username* - REDACTED
-
 """
 
 
@@ -18,9 +24,11 @@ async def get_user_from_mention(db: Database, message: str) -> User | None:
     """
     Get a mention of a user.
     """
-    for word in message.split(" "):
-        if word.startswith("@"):
+    for word in message.split(" "):  # Get each word of the message
+        if word.startswith("@"):  # If it starts with an @, it's a mention
             user = await db.get_user(word[1:])
+
+            # That user doesn't exist. How sad.
             if user is None:
                 return None
 
@@ -33,10 +41,12 @@ async def process_command(db: "Database", message: str, user: "User") -> str | N
     """
     Process a command that is sent by a user.
     """
-    match message.split(" ")[0].strip(":"):
+    match message.startswith(":"):  # If the message starts with a colon, it's a command
         case "bonk":
             to_bonk = await get_user_from_mention(db, message)
 
+            # An unreasonable amount of commands are like this.
+            # Perhaps we must abstract it. Eventually.
             if to_bonk is None:
                 return None
 
@@ -71,31 +81,10 @@ async def process_command(db: "Database", message: str, user: "User") -> str | N
                 return None
             message = await chirp(chirping)
             return message
+
         case "help":
-            message = help_mes
+            message = HELP_MSG
             return message
-
-        case "ban":
-            if not user.permissions & Permissions.BAN:
-                return None
-
-            to_ban = await get_user_from_mention(db, message)
-
-            if to_ban is None:
-                return None
-
-            return await ban(db, to_ban)
-
-        case "ban":
-            if not user.permissions & Permissions.BAN:
-                return None
-
-            to_ban = await get_user_from_mention(db, message)
-
-            if to_ban is None:
-                return None
-
-            return await ban(db, to_ban)
 
         case "ban":
             if not user.permissions & Permissions.BAN:

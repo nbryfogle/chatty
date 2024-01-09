@@ -22,7 +22,9 @@ class Permissions(Flag):
 
 class User:
     """
-    User object to store user data.
+    User object to store user data. One day, this will become
+    a powerful object that can be used to interact with the 
+    database directly. Oh, the possibilities.
     """
     def __init__(self, data: dict):
         self.email: str = data.get('email', None)
