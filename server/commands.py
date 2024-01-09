@@ -67,7 +67,15 @@ async def bonk(ctx: Context) -> Message | None:
         random.choice(bonk_messages).format(ctx.first_mention.displayname),
         ctx.message.author
         )
+        
+@command("help", "Get help. Usage: :help")
+async def help(ctx: Context) -> Message | None:
+    content = "\n".join(f"{cmd.name} - {cmd.description}" for cmd in command_register)
 
+    #if ctx.first_mention:
+        #return None
+    
+    return command_msg(content)
 
 @command("squiddy", "Send a squidward quote. Usage: :squiddy @username")
 async def squiddy(ctx: Context) -> Message | None:
