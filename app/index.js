@@ -52,7 +52,7 @@ socket.on("message", (data) => {
     console.log(data);
 
     if (data.type === "command") {
-        $("#messages").append(`<li>${data.author} ${data.message}</li>`);
+        $("#messages").append(`<li>${data.author.displayname || data.author} ${data.message}</li>`);
     } else {
         $("#messages").append(`<li>${data.author.displayname || data.author} at ${data.timestamp}: ${data.message}</li>`);
     }
