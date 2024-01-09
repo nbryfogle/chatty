@@ -249,7 +249,7 @@ async def message(sid, data):
                 "channel": "general",
                 "timestamp": current_time,
                 "type": MessageType.ERROR,
-            }, db), sid)
+            }, server), sid)
         return
 
     user = await db.get_user(session["username"])
@@ -264,7 +264,7 @@ async def message(sid, data):
         "channel": "general",
         "timestamp": current_time,
         "type": MessageType.NORMAL,
-    }, db)
+    }, server)
 
     # If the message starts with a colon, it is a command.
     if context.message.content.startswith(":"):
@@ -276,7 +276,7 @@ async def message(sid, data):
                 "channel": "general",
                 "timestamp": current_time,
                 "type": MessageType.ERROR,
-            }, db), sid)
+            }, server), sid)
             return
         
         command_message = await server.process_command(context) # Process the command
@@ -290,11 +290,11 @@ async def message(sid, data):
                 "channel": "general",
                 "timestamp": current_time,
                 "type": MessageType.ERROR,
-            }, db), sid)
+            }, server), sid)
 
         else:
             # Finally, send the command message to the user.
-            await server.send_message(await Context.from_message(db, command_message))
+            await server.send_message(await Context.from_message(server, command_message))
         return
 
     # If the user does not have permission to send messages, reject the message.
@@ -304,7 +304,7 @@ async def message(sid, data):
                 "username": "Server",
                 "time": current_time,
                 "type": MessageType.ERROR,
-            }, db), sid)
+            }, server), sid)
         return
 
     # Finally, save the message to the database and send it to everyone.
