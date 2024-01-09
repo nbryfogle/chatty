@@ -119,6 +119,6 @@ async def ban(ctx: Context) -> Message | None:
         return None
 
     ctx.first_mention.permissions = Permissions(0)
-    await ctx.db.update_user(ctx.first_user)
+    await ctx.app.db.update_user(ctx.first_mention)
 
     return command_msg(f"Banned {ctx.first_mention.username} ({ctx.first_mention.displayname}).")

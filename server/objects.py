@@ -89,8 +89,8 @@ class Application:
 
 
 class Context:
-    def __init__(self, db: "Database", message: "Message"):
-        self.db = db
+    def __init__(self, app: "Application", message: "Message"):
+        self.app: "Application" = app
         self.message = message
         self.mentions = []
         self.mentioned = False
@@ -99,8 +99,8 @@ class Context:
         self.args = []
 
     @classmethod
-    async def from_message(cls, db: "Database", message: "Message") -> "Context":
-        ctx = cls(db, message)
+    async def from_message(cls, app: "Application", message: "Message") -> "Context":
+        ctx = cls(app, message)
         ctx.mentioned = await ctx.get_mentions()
         ctx.command = await ctx.get_command()
         ctx.is_command = ctx.command is not None
@@ -108,9 +108,9 @@ class Context:
         return ctx
 
     @classmethod
-    async def with_message(cls, message_data: dict, db: "Database") -> "Context":
+    async def with_message(cls, message_data: dict, app: "Application", ) -> "Context":
         message = Message(message_data)
-        return await cls.from_message(db, message)
+        return await cls.from_message(app, message)
 
     async def get_mentions(self) -> None:
         """
@@ -118,7 +118,7 @@ class Context:
         """
         for word in self.message.content.split():
             if word.startswith("@"):
-                user = await self.db.get_user(word[1:])
+                user = await self.app.db.get_user(word[1:])
 
                 if user is not None:
                     self.mentions.append(user)
