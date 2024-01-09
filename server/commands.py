@@ -73,6 +73,7 @@ async def bonk(ctx: Context) -> Message | None:
 async def squiddy(ctx: Context) -> Message | None:
     squid_mess = [
         ": AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! {}, YOUR RECKONING WILL BEFALL UPON YOU!",
+        "what if I pop my bumhole out and let it dry in the sun? {}",
     ]
     if not ctx.first_mention:
         return None
