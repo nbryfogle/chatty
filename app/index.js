@@ -52,9 +52,9 @@ socket.on("message", (data) => {
     console.log(data);
 
     if (data.type === "command") {
-        $("#messages").append(`<li>${data.username} ${data.message}</li>`);
+        $("#messages").append(`<li>${data.author} ${data.message}</li>`);
     } else {
-        $("#messages").append(`<li>${data.username} at ${data.time}: ${data.message}</li>`);
+        $("#messages").append(`<li>${data.author.displayname || data.author} at ${data.timestamp}: ${data.message}</li>`);
     }
     $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
 });

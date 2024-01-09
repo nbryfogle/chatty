@@ -3,7 +3,7 @@ I can't wait to write code comments on this abomination.
 """
 
 import aiosqlite
-from objects import User
+from objects import User, Message
 
 class Database:
     """
@@ -157,14 +157,14 @@ class Database:
 
         await self.conn.commit()
 
-    async def capture_message(self, username: str, message_content: str) -> None:
+    async def capture_message(self, message: "Message") -> None:
         """
         Capture a message from a user and store it in the database.
         """
         await self.c.execute('''
             INSERT INTO messages (message, author, channel)
             VALUES (?, ?, ?)
-        ''', (message_content, username, "general"))
+        ''', (message.content, message.author.displayname if isinstance(message.author, User) else message.author, "general"))
 
         await self.conn.commit()     
 

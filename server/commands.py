@@ -5,8 +5,8 @@ have fun with some funny messages.
 """
 
 import random
-from database import Database
-from objects import User, Permissions
+from objects import Permissions, Context, Command, Message, MessageType, User
+from typing import Callable
 
 
 HELP_MSG = """
@@ -20,87 +20,31 @@ Current commands: (* = required argument)
 """
 
 
-async def get_user_from_mention(db: Database, message: str) -> User | None:
+command_register: list["Command"] = []
+
+def command(name: str, description: str) -> Callable:
     """
-    Get a mention of a user.
+    Decorator for describing a function as command.
     """
-    for word in message.split(" "):  # Get each word of the message
-        if word.startswith("@"):  # If it starts with an @, it's a mention
-            user = await db.get_user(word[1:])
+    def decorator(func):
+        command_register.append(Command(name, func, description))
+        return func
 
-            # That user doesn't exist. How sad.
-            if user is None:
-                return None
+    return decorator
 
-            return user
-
-    return None
-
-
-async def process_command(db: "Database", message: str, user: "User") -> str | None:
+def command_msg(content: str, author: User | str = "Server") -> Message:
     """
-    Process a command that is sent by a user.
+    Create a message from a command.
     """
-    match message.startswith(":"):  # If the message starts with a colon, it's a command
-        case "bonk":
-            to_bonk = await get_user_from_mention(db, message)
+    return Message({
+        "content": content,
+        "author": author,
+        "channel": "general",
+        "type": MessageType.COMMAND,
+    })
 
-            # An unreasonable amount of commands are like this.
-            # Perhaps we must abstract it. Eventually.
-            if to_bonk is None:
-                return None
-
-            message = await bonk(to_bonk)
-
-            return message
-
-        case "squiddy":
-            to_squid = await get_user_from_mention(db, message)
-
-            if to_squid is None:
-                return None
-
-            message = await squiddy(to_squid)
-
-            return message
-
-        case "kwispy":
-            to_kwispy = await get_user_from_mention(db, message)
-
-            if to_kwispy is None:
-                return None
-
-            message = await kwispy(to_kwispy)
-
-            return message
-
-        case "chirp":
-            chirping = await get_user_from_mention(db, message)
-
-            if chirping is None:
-                return None
-            message = await chirp(chirping)
-            return message
-
-        case "help":
-            message = HELP_MSG
-            return message
-
-        case "ban":
-            if not user.permissions & Permissions.BAN:
-                return None
-
-            to_ban = await get_user_from_mention(db, message)
-
-            if to_ban is None:
-                return None
-
-            return await ban(db, to_ban)
-
-    return None
-
-
-async def bonk(user: User) -> str:
+@command("bonk", "Bonk a sucker on the head. Usage: :bonk @username")
+async def bonk(ctx: Context) -> Message | None:
     bonk_messages = [
         "bonks {} on the head",
         "breaks {}'s kneecaps",
@@ -116,18 +60,30 @@ async def bonk(user: User) -> str:
         "bonks {} into the sun",
     ]
 
-    return random.choice(bonk_messages).format(user.displayname)
+    if not ctx.first_mention:
+        return None
 
+    return command_msg(
+        random.choice(bonk_messages).format(ctx.first_mention.displayname),
+        ctx.message.author
+        )
+        
 
-async def squiddy(user: User) -> str:
+@command("squiddy", "Send a squidward quote. Usage: :squiddy @username")
+async def squiddy(ctx: Context) -> Message | None:
     squid_mess = [
         ": AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! {}, YOUR RECKONING WILL BEFALL UPON YOU!",
     ]
+    if not ctx.first_mention:
+        return None
 
-    return random.choice(squid_mess).format(user.displayname)
-
-
-async def kwispy(user: User) -> str:
+    return command_msg(
+        random.choice(squid_mess).format(ctx.first_mention.displayname),
+        ctx.message.author
+        )
+        
+@command("kwispy", "Light a sucker on fire. Usage: :kwispy @username")
+async def kwispy(ctx: Context) -> Message | None:
     kwispy_mess = [
         "sets {} on fire.",
         "sets {} alight with his magic butane blaster.",
@@ -135,21 +91,34 @@ async def kwispy(user: User) -> str:
         "proceeds to melt {}'s face off.",
         "lights {} on fire with some good ol' fasioned matches.",
     ]
+    if not ctx.first_mention:
+        return None
 
-    return random.choice(kwispy_mess).format(user.displayname)
+    return command_msg(
+        random.choice(kwispy_mess).format(ctx.first_mention.displayname),
+        ctx.message.author
+        )
 
-
-async def chirp(user: User) -> str:
+@command("chirp", "Insult someone, I guess. Usage: :chirp @username")
+async def chirp(ctx: Context) -> Message | None:
     chirpmess = [
         "Hey {}, why don't ya skate, ya pheasant!?",
         "Hey {}, I've seen better hands on a digital clock!",
     ]
+    if not ctx.first_mention:
+        return None
 
-    return random.choice(chirpmess).format(user.displayname)
+    return command_msg(
+        random.choice(chirpmess).format(ctx.first_mention.displayname),
+        ctx.message.author
+        )
 
+@command("ban", "Ban a sucker. Usage: :ban @username")
+async def ban(ctx: Context) -> Message | None:
+    if not ctx.first_mention:
+        return None
 
-async def ban(db: "Database", user: User) -> str:
-    user.permissions = Permissions(0)
-    await db.update_user(user)
+    ctx.first_mention.permissions = Permissions(0)
+    await ctx.db.update_user(ctx.first_user)
 
-    return f"Banned {user.displayname}."
+    return command_msg(f"Banned {ctx.first_mention.username} ({ctx.first_mention.displayname}).")

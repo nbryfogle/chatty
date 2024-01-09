@@ -11,9 +11,9 @@ import bcrypt
 import hypercorn.asyncio as hasync
 import hypercorn.config as hconfig
 import socketio
-from commands import process_command
 from database import Database
-from objects import Permissions
+from objects import Permissions, Application, Context, MessageType
+from commands import command_register
 from quart import Quart, request
 from quart_cors import cors
 
@@ -29,7 +29,7 @@ app = cors(app, allow_origin="*")
 db = asyncio.run(Database.connect("server/database/database.db"))
 sio_app = socketio.ASGIApp(sio, app)
 hypercorn_config = hconfig.Config.from_mapping(bind=["localhost:5000"], debug=True)
-
+server = Application(db, sio, command_register)
 
 @app.route("/api/signup", methods=["POST"])
 async def signup() -> tuple[dict[str, str], int]:
@@ -157,7 +157,6 @@ async def connect(sid: str, data: dict, auth: str):
     """
     print("attempting to connect...")
     print(auth)
-    print(data)
 
     # If the auth variable is not a string, disconnect the user.
     # This means the user did not provide a session token.
@@ -235,17 +234,22 @@ async def message(sid, data):
     if not data:
         return
 
+    # Get the current time in hours, minutes, and seconds.
+    # Perhaps the database should store the day the message was
+    # send too, and it should be the client's decision what
+    # to show.
+    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
     # Enforce the character limit of 1000 characters.
     if len(data) > 1000:
-        await sio.emit(
-            "message",
-            {
+        await server.send_message(
+            await Context.with_message({
                 "message": "Message exceeds limit of 1000 characters.",
-                "username": "Server",
-                "time": datetime.datetime.now().strftime("%H:%M:%S"),
-            },
-            to=sid,
-        )
+                "author": "server",
+                "channel": "general",
+                "timestamp": current_time,
+                "type": MessageType.ERROR,
+            }, db), sid)
         return
 
     user = await db.get_user(session["username"])
@@ -254,82 +258,57 @@ async def message(sid, data):
     if user is None:
         return
 
-    # Get the current time in hours, minutes, and seconds.
-    # Perhaps the database should store the day the message was
-    # send too, and it should be the client's decision what
-    # to show.
-    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+    context = await Context.with_message({
+        "message": data,
+        "author": user,
+        "channel": "general",
+        "timestamp": current_time,
+        "type": MessageType.NORMAL,
+    }, db)
 
     # If the message starts with a colon, it is a command.
-    if data.startswith(":"):
-        if not user.permissions & Permissions.COMMANDS: 
+    if context.message.content.startswith(":"):
+        if not user.permissions & Permissions.COMMANDS:
             # Reject the command if the user does not have permission to send commands.
-            await sio.emit(
-                "message",
-                {
-                    "message": "You do not have permission to send commands.",
-                    "username": "Server",
-                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                    "type": "error",
-                },
-                to=sid,
-            )
+            await server.send_message(await Context.with_message({
+                "message": "You do not have permission to send commands.",
+                "author": "server",
+                "channel": "general",
+                "timestamp": current_time,
+                "type": MessageType.ERROR,
+            }, db), sid)
             return
         
-        command_message = await process_command(db, data, user)
+        command_message = await server.process_command(context) # Process the command
 
         # If the command message returned None, it means the command failed for
         # some reason. Inform the user.
         if command_message is None:
-            await sio.emit(
-                "message",
-                {
-                    "message": "Invalid command or mention.",
-                    "username": "Server",
-                    "time": current_time,
-                    "type": "error",
-                },
-                to=sid,
-            )
+            await server.send_message(await Context.with_message({
+                "message": "Command failed (invalid command or mention?).",
+                "author": "Server",
+                "channel": "general",
+                "timestamp": current_time,
+                "type": MessageType.ERROR,
+            }, db), sid)
 
         else:
             # Finally, send the command message to the user.
-            await sio.emit(
-                "message",
-                {
-                    "message": command_message,
-                    "username": user.displayname,
-                    "time": current_time,
-                    "type": "command",
-                },
-            )
+            await server.send_message(await Context.from_message(db, command_message))
         return
 
     # If the user does not have permission to send messages, reject the message.
     if not user.permissions & Permissions.SEND:
-        await sio.emit(
-            "message",
-            {
+        await server.send_message(await Context.with_message({
                 "message": "You do not have permission to send messages.",
                 "username": "Server",
-                "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                "type": "error",
-            },
-            to=sid,
-        )
+                "time": current_time,
+                "type": MessageType.ERROR,
+            }, db), sid)
         return
 
     # Finally, save the message to the database and send it to everyone.
-    await db.capture_message(user.displayname, data)
-    await sio.emit(
-        "message",
-        {
-            "message": data,
-            "username": user.displayname,
-            "time": current_time,
-            "type": "message",
-        },
-    )
+    await server.send_message(context)
 
 
 if __name__ == "__main__":
