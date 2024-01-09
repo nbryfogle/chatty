@@ -5,7 +5,6 @@ such as the User object and the Message object.
 
 from enum import Flag, Enum
 from typing import TYPE_CHECKING
-from errors import InsufficientPermissions
 from datetime import datetime
 
 if TYPE_CHECKING:
@@ -55,12 +54,21 @@ class Message:
 
 
 class Command:
+    """
+    Define a command that the user can use.
+    """
     def __init__(self, name: str, func, description: str):
         self.name = name
         self.func = func
         self.description = description
 
-    async def execute(self, ctx: "Context") -> str:
+    async def execute(self, ctx: "Context") -> Message | None:
+        """
+        Execute the command based on the context.
+        """
+        if not ctx.is_command or not ctx.message.author.permissions & Permissions.COMMANDS:
+            return None
+
         return await self.func(ctx)
 
 
