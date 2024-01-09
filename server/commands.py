@@ -67,7 +67,7 @@ async def bonk(ctx: Context) -> Message | None:
         random.choice(bonk_messages).format(ctx.first_mention.displayname),
         ctx.message.author
         )
-        
+
 
 @command("squiddy", "Send a squidward quote. Usage: :squiddy @username")
 async def squiddy(ctx: Context) -> Message | None:
@@ -82,7 +82,8 @@ async def squiddy(ctx: Context) -> Message | None:
         random.choice(squid_mess).format(ctx.first_mention.displayname),
         ctx.message.author
         )
-        
+
+
 @command("kwispy", "Light a sucker on fire. Usage: :kwispy @username")
 async def kwispy(ctx: Context) -> Message | None:
     kwispy_mess = [
@@ -100,6 +101,7 @@ async def kwispy(ctx: Context) -> Message | None:
         ctx.message.author
         )
 
+
 @command("chirp", "Insult someone, I guess. Usage: :chirp @username")
 async def chirp(ctx: Context) -> Message | None:
     chirpmess = [
@@ -114,11 +116,21 @@ async def chirp(ctx: Context) -> Message | None:
         ctx.message.author
         )
 
+
 @command("ban", "Ban a sucker. Usage: :ban @username")
 async def ban(ctx: Context) -> Message | None:
+    """
+    Ban a user from the chat.
+    """
+    # Can't ban a sucker if there's no sucker to ban
     if not ctx.first_mention:
         return None
 
+    # Can't ban a sucker if you don't have permissions to do so
+    if not ctx.message.author.permissions & Permissions.BAN:
+        return command_msg("You don't have permission to ban users.", ctx.message.author)
+
+    # Setting the permissions to 0 will prevent the user from doing anything
     ctx.first_mention.permissions = Permissions(0)
     await ctx.app.db.update_user(ctx.first_mention)
 
