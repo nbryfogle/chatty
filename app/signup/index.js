@@ -10,6 +10,7 @@ if (document.cookie.includes("token") && document.cookie.split("token=")[1].spli
 function signUp() {
     // Send a POST request to /api/signup
 
+    // Validate the email address to make sure it could possibly be a valid one.
     if ($("#email").val().includes("@") === false || $("#email").val().includes(".") === false) {
         alert("Invalid email");
         return;
