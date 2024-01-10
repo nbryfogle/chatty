@@ -1,8 +1,13 @@
-from enum import Flag, Enum
+"""
+These enums are a useful way to represent common data in a human-readable format.
+"""
+
+from enum import Enum, Flag
+
 
 class Permissions(Flag):
     """
-    Flag enum to control what permissions a user
+    Flag enum to represent what permissions a user
     may have.
     """
     READ = 1
@@ -17,7 +22,7 @@ class Permissions(Flag):
 
 class MessageType(Enum):
     """
-    Enum to control what type of message is being sent.
+    Enum to represent what type of message is being sent.
     """
     NORMAL = "message"
     COMMAND = "command"

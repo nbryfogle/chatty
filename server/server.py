@@ -9,10 +9,10 @@ import datetime
 import hypercorn.asyncio as hasync
 import hypercorn.config as hconfig
 import socketio
-from database import db, DBUser
-from objects import Application, Context
-from enums import Permissions, MessageType
 from commands import command_register
+from database import DBUser, db
+from enums import MessageType, Permissions
+from objects import Application, Context
 from quart import Quart, request
 from quart_cors import cors
 
@@ -28,6 +28,7 @@ app = cors(app, allow_origin="*")
 sio_app = socketio.ASGIApp(sio, app)
 hypercorn_config = hconfig.Config.from_mapping(bind=["localhost:5000"], debug=True)
 server = Application(db, sio, command_register)
+
 
 @app.route("/api/signup", methods=["POST"])
 async def signup() -> tuple[dict[str, str], int]:
@@ -47,7 +48,12 @@ async def signup() -> tuple[dict[str, str], int]:
     """
     # Get the data from the request
     data: dict[str, str] = await request.get_json()
-    required_keys = ["username", "password", "email", "dob"] # Keys that are required to sign a user up
+    required_keys = [
+        "username",
+        "password",
+        "email",
+        "dob",
+    ]  # Keys that are required to sign a user up
 
     # Make sure all of the necessary information is supplied by the client
     if not data or not all(key in data and data[key] for key in required_keys):
@@ -62,13 +68,15 @@ async def signup() -> tuple[dict[str, str], int]:
         data["displayname"] = data["username"]
 
     # Insert the user into the database
-    user = await DBUser.create({
-        "username": data["username"],
-        "password": data["password"],
-        "email": data["email"],
-        "displayname": data["displayname"],
-        "dob": data["dob"],
-    })
+    user = await DBUser.create(
+        {
+            "username": data["username"],
+            "password": data["password"],
+            "email": data["email"],
+            "displayname": data["displayname"],
+            "dob": data["dob"],
+        }
+    )
 
     return {"status": "success", "user": user.as_sendable()}, 200
 
@@ -92,13 +100,16 @@ async def login() -> tuple[dict[str, str], int]:
     # If the user exists and the password matches, return a token
     user = await DBUser.get(data["username"])
 
-    # If the user is None, that means it does not exist. 
+    # If the user is None, that means it does not exist.
     if user is None:
         return {"status": "error", "message": "User does not exist"}, 401
 
-    # The check_password function will return True if the password matches, and False if it does not.
+    # The check_password function will return True if the password matches,
+    # and False if it does not.
     if user.check_password(data["password"]):
-        if user.session is None: # Create a new session token if the user does not have one
+        if (
+            user.session is None
+        ):  # Create a new session token if the user does not have one
             await user.refresh_session()
 
         return {"status": "success", "session": user.session}, 200
@@ -112,7 +123,7 @@ async def get_user(username) -> tuple[dict[str, str | dict], int]:
     """
     Returns information about a user from the database.
     """
-    user = await DBUser.get(username) # Get the user from the database
+    user = await DBUser.get(username)  # Get the user from the database
 
     # If the user does not exist, return an error
     if user is None:
@@ -130,13 +141,17 @@ async def connect(sid: str, data: dict, auth: str):
     print("attempting to connect...")
     print(auth)
 
+    # Do something useless with the data variable to get the linter
+    # to stop complaining.
+    print(data)
+
     # If the auth variable is not a string, disconnect the user.
     # This means the user did not provide a session token.
     if not isinstance(auth, str):
         await sio.disconnect(sid)
         return
 
-    username = await db.authenticate_user(auth) # Check if the session token is valid
+    username = await db.authenticate_user(auth)  # Check if the session token is valid
 
     # If the username is None, that means the session token is invalid.
     if username is None:
@@ -151,12 +166,14 @@ async def connect(sid: str, data: dict, auth: str):
         await sio.disconnect(sid)
         return
 
-    messages = await db.get_messages() # Get recent messages from the database
+    messages = await db.get_messages()  # Get recent messages from the database
 
     # Save the session token to the socketIO session
     await sio.save_session(sid, {"username": user.username})
-    await sio.emit("previous_messages", {"messages": messages}, to=sid) # Send the messages to the user
-    await sio.emit( # Send a welcome message!
+    await sio.emit(
+        "previous_messages", {"messages": messages}, to=sid
+    )  # Send the messages to the user
+    await sio.emit(  # Send a welcome message!
         "message",
         {
             "message": f"{user.username} has connected as {user.display_name}",
@@ -215,13 +232,18 @@ async def message(sid, data):
     # Enforce the character limit of 1000 characters.
     if len(data) > 1000:
         await server.send_message(
-            await Context.with_message({
-                "message": "Message exceeds limit of 1000 characters.",
-                "author": "server",
-                "channel": "general",
-                "timestamp": current_time,
-                "type": MessageType.ERROR,
-            }, server), sid)
+            await Context.with_message(
+                {
+                    "message": "Message exceeds limit of 1000 characters.",
+                    "author": "server",
+                    "channel": "general",
+                    "timestamp": current_time,
+                    "type": MessageType.ERROR,
+                },
+                server,
+            ),
+            sid,
+        )
         return
 
     user = await DBUser.get(session["username"])
@@ -230,53 +252,76 @@ async def message(sid, data):
     if user is None:
         return
 
-    context = await Context.with_message({
-        "message": data,
-        "author": user,
-        "channel": "general",
-        "timestamp": current_time,
-        "type": MessageType.NORMAL,
-    }, server)
+    context = await Context.with_message(
+        {
+            "message": data,
+            "author": user,
+            "channel": "general",
+            "timestamp": current_time,
+            "type": MessageType.NORMAL,
+        },
+        server,
+    )
 
     # If the message starts with a colon, it is a command.
     if context.message.content.startswith(":"):
         if not user.permissions & Permissions.COMMANDS:
             # Reject the command if the user does not have permission to send commands.
-            await server.send_message(await Context.with_message({
-                "message": "You do not have permission to send commands.",
-                "author": "server",
-                "channel": "general",
-                "timestamp": current_time,
-                "type": MessageType.ERROR,
-            }, server), sid)
+            await server.send_message(
+                await Context.with_message(
+                    {
+                        "message": "You do not have permission to send commands.",
+                        "author": "server",
+                        "channel": "general",
+                        "timestamp": current_time,
+                        "type": MessageType.ERROR,
+                    },
+                    server,
+                ),
+                sid,
+            )
             return
 
-        command_message = await server.process_command(context) # Process the command
+        command_message = await server.process_command(context)  # Process the command
 
         # If the command message returned None, it means the command failed for
         # some reason. Inform the user.
         if command_message is None:
-            await server.send_message(await Context.with_message({
-                "message": "Command failed (invalid command or mention?).",
-                "author": "Server",
-                "channel": "general",
-                "timestamp": current_time,
-                "type": MessageType.ERROR,
-            }, server), sid)
+            await server.send_message(
+                await Context.with_message(
+                    {
+                        "message": "Command failed (invalid command or mention?).",
+                        "author": "Server",
+                        "channel": "general",
+                        "timestamp": current_time,
+                        "type": MessageType.ERROR,
+                    },
+                    server,
+                ),
+                sid,
+            )
 
         else:
             # Finally, send the command message to the user.
-            await server.send_message(await Context.from_message(server, command_message))
+            await server.send_message(
+                await Context.from_message(server, command_message)
+            )
         return
 
     # If the user does not have permission to send messages, reject the message.
     if not user.permissions & Permissions.SEND:
-        await server.send_message(await Context.with_message({
-                "message": "You do not have permission to send messages.",
-                "username": "Server",
-                "time": current_time,
-                "type": MessageType.ERROR,
-            }, server), sid)
+        await server.send_message(
+            await Context.with_message(
+                {
+                    "message": "You do not have permission to send messages.",
+                    "username": "Server",
+                    "time": current_time,
+                    "type": MessageType.ERROR,
+                },
+                server,
+            ),
+            sid,
+        )
         return
 
     # Finally, save the message to the database and send it to everyone.
