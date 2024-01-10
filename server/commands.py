@@ -5,8 +5,10 @@ have fun with some funny messages.
 """
 
 import random
-from objects import Permissions, Context, Command, Message, MessageType, User
 from typing import Callable
+from objects import Context, Command, Message
+from enums import Permissions, MessageType
+from database import DBUser
 
 
 HELP_MSG = """
@@ -32,7 +34,7 @@ def command(name: str, description: str) -> Callable:
 
     return decorator
 
-def command_msg(content: str, author: User | str = "Server") -> Message:
+def command_msg(content: str, author: DBUser | str = "Server") -> Message:
     """
     Create a message from a command.
     """
@@ -64,10 +66,10 @@ async def bonk(ctx: Context) -> Message | None:
         return None
 
     return command_msg(
-        random.choice(bonk_messages).format(ctx.first_mention.displayname),
+        random.choice(bonk_messages).format(ctx.first_mention.display_name),
         ctx.message.author
         )
-        
+
 @command("help", "Get help. Usage: :help")
 async def help(ctx: Context) -> Message | None:
     content = "<br/>".join(f"{cmd.name} - {cmd.description}" for cmd in command_register)
@@ -87,7 +89,7 @@ async def squiddy(ctx: Context) -> Message | None:
         return None
 
     return command_msg(
-        random.choice(squid_mess).format(ctx.first_mention.displayname),
+        random.choice(squid_mess).format(ctx.first_mention.display_name),
         ctx.message.author
         )
 
@@ -105,7 +107,7 @@ async def kwispy(ctx: Context) -> Message | None:
         return None
 
     return command_msg(
-        random.choice(kwispy_mess).format(ctx.first_mention.displayname),
+        random.choice(kwispy_mess).format(ctx.first_mention.display_name),
         ctx.message.author
         )
 
@@ -120,7 +122,7 @@ async def chirp(ctx: Context) -> Message | None:
         return None
 
     return command_msg(
-        random.choice(chirpmess).format(ctx.first_mention.displayname),
+        random.choice(chirpmess).format(ctx.first_mention.display_name),
         ctx.message.author
         )
 
@@ -142,4 +144,4 @@ async def ban(ctx: Context) -> Message | None:
     ctx.first_mention.permissions = Permissions(0)
     await ctx.app.db.update_user(ctx.first_mention)
 
-    return command_msg(f"Banned {ctx.first_mention.username} ({ctx.first_mention.displayname}).")
+    return command_msg(f"Banned {ctx.first_mention.username} ({ctx.first_mention.display_name}).")

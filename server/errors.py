@@ -1,26 +1,11 @@
-class CommandError(Exception):
+class DatabaseError(Exception):
     """
-    Exception to be raised when a command fails.
-    """
-    pass
-
-
-class CommandNotFound(CommandError):
-    """
-    Exception to be raised when a command is not found.
+    Exception to be raised when something goes wrong in the database.
     """
     pass
 
-
-class SocketError(Exception):
+class MalformedDataError(DatabaseError):
     """
-    Exception to be raised when a socket fails.
-    """
-    pass
-
-
-class InsufficientPermissions(Exception):
-    """
-    Exception to be raised when a user has insufficient permissions.
+    Exception to be raised when the data is malformed.
     """
     pass

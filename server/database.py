@@ -2,8 +2,16 @@
 I can't wait to write code comments on this abomination.
 """
 
+import asyncio
+from typing import TYPE_CHECKING
+from uuid import uuid4
 import aiosqlite
-from objects import User, Message
+from enums import Permissions
+from errors import MalformedDataError
+import bcrypt
+
+if TYPE_CHECKING:
+    from objects import Message
 
 class Database:
     """
@@ -68,95 +76,6 @@ class Database:
 
         return user["username"]
 
-    async def check_user_exists(self, username: str) -> bool:
-        """
-        Check if a user exists in the database.
-        """
-        await self.c.execute('''
-            SELECT * FROM users WHERE username = ?
-        ''', (username,))
-        user = await self.c.fetchone()
-
-        # If the user does not exist, their ass is grass
-        if user is None:
-            return False
-
-        return True
-
-    async def check_email_exists(self, email: str) -> bool:
-        """
-        Check if a user exists in the database.
-        """
-        await self.c.execute('''
-            SELECT * FROM users WHERE email = ?
-        ''', (email,))
-        user = await self.c.fetchone()
-
-        # If the email does not exist with a user, tell them so.
-        if user is None:
-            return False
-
-        return True
-
-    async def create_user(self, data: dict) -> tuple[dict, int]:
-        """
-        Create a user in the database.
-        Data example:
-        {
-            "username": "test",
-            "password": "test",
-            "email": "ex@example.com"
-            "display_name": "test"
-        }
-        """
-
-        # If the user exists, fuck 'em
-        if await self.check_user_exists(data['username']):
-            return {"status": "error", "message": "Username is already in use."}, 401
-
-        # Same with the email address
-        if await self.check_email_exists(data['email']):
-            return {"status": "error", "message": "Email is already in use."}, 401
-
-        # This says, "create a new user with this information in the users table."
-        await self.c.execute('''
-            INSERT INTO users (email, username, password, password_salt, displayname, dob)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (data['email'], data['username'], data['password'], data['password_salt'], data['displayname'], data['dob']))
-
-        await self.conn.commit()
-
-        return {"status": "success"}, 200
-
-    async def get_user(self, username: str) -> User | None:
-        """
-        Get a user from the database.
-        """
-        await self.c.execute('''
-            SELECT * FROM users WHERE username = ?
-        ''', (username,))
-        user = await self.c.fetchone()
-
-        # Imagine not existing. Couldn't be me.
-        if user is None:
-            return None
-        
-        return User(dict(user))
-
-    async def update_user(self, user: User) -> None:
-        """
-        Update a user's data in the database.
-        """
-        await self.c.execute('''
-                             
-            UPDATE users SET email = ?, username = ?, password = ?, password_salt = ?, displayname = ?, dob = ?, session = ?, permissions = ? WHERE username = ?
-        ''', (user.email, user.username, user.password, user.password_salt, user.displayname, user.dob, user.session, user.permissions.value, user.username))
-        
-        # This bullshit does NOT CARE if you exist or not. It will update you anyway.
-        # I guess that's a job for whoever is calling this function.
-
-        await self.conn.commit()
-
     async def capture_message(self, message: "Message") -> None:
         """
         Capture a message from a user and store it in the database.
@@ -164,9 +83,9 @@ class Database:
         await self.c.execute('''
             INSERT INTO messages (message, author, channel)
             VALUES (?, ?, ?)
-        ''', (message.content, message.author.displayname if isinstance(message.author, User) else message.author, "general"))
+        ''', (message.content, message.author.display_name if isinstance(message.author, DBUser) else message.author, "general"))
 
-        await self.conn.commit()     
+        await self.conn.commit()
 
     async def get_messages(self, amount: int = 20) -> list[dict]:
         """
@@ -179,4 +98,140 @@ class Database:
         messages = await self.c.fetchall()
 
         return [dict(message) for message in messages][::-1]
-    
+
+db = asyncio.run(Database.connect("server/database/database.db"))
+
+class DBUser:
+    """
+    Represents a user in the database. This holds methods that may
+    be useful for working with the user, such as changing information
+    and, well, getting information. Obviously.
+    """
+    def __init__(self, data: dict):
+        self.data = data
+
+    @classmethod
+    async def get(cls, username: str) -> "DBUser | None":
+        """
+        Get a user from the database.
+        """
+        await db.c.execute('''
+            SELECT * FROM users WHERE username = ?
+        ''', (username,))
+        user = await db.c.fetchone()
+
+        # The user doesn't exist. What a shame.
+        if user is None:
+            return None
+        
+        return cls(dict(user))
+
+    @classmethod
+    async def create(cls, data: dict) -> "DBUser":
+        """
+        The user wants to exist. What a shame.
+        Data should look something like this:
+        {
+            "username": "test",
+            "password": "test",
+            "email": "themail@mail.net",
+            "displayname": "test",
+            "dob": "01/01/2000"
+        }
+        """
+        if not all(key in data and data[key] for key in ("username", "password", "email", "dob")):
+            raise MalformedDataError("Unable to create user: Missing key in data.")
+        
+        data["displayname"] = data.get("displayname", data["username"])
+        
+        salt = bcrypt.gensalt()
+        data["password"] = bcrypt.hashpw(bytes(data["password"], encoding="utf-8"), salt)
+            
+        await db.c.execute('''
+            INSERT INTO users (email, username, password, password_salt, displayname, dob)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (data['email'], data['username'], data['password'], salt, data['displayname'], data['dob']))
+
+        await db.conn.commit()
+        user = await cls.get(data["username"])
+
+        return user
+
+    async def update(self) -> None:
+        """
+        Update the user's data in the database.
+        """
+        await db.c.execute('''
+                             
+            UPDATE users SET email = ?, username = ?, displayname = ?, dob = ?, session = ?, permissions = ? WHERE username = ?
+        ''', (self.email, self.username, self.data.get("displayname", None), self.dob, self.session, self.permissions.value, self.username))
+        
+        # This bullshit does NOT CARE if you exist or not. It will update you anyway.
+        # I guess that's a job for whoever is calling this function.
+
+        await db.conn.commit()
+
+    def check_password(self, password: str) -> bool:
+        """
+        Check if the user's password is correct.
+        """
+        return bcrypt.checkpw(bytes(password, encoding="utf-8"), self.data["password"])
+
+    async def refresh_session(self) -> str:
+        """
+        Refresh the user's session token.
+        """
+        self.data["session"] = str(uuid4())
+        await self.update()
+
+        return self.session
+
+    def as_sendable(self) -> dict:
+        """
+        Get the user's data in a sendable format.
+        """
+        return {
+            "username": self.username,
+            "displayname": self.display_name,
+            "permissions": self.permissions.value
+        }
+
+    @property
+    def email(self) -> str | None:
+        return self.data.get("email", None)
+
+    @email.setter
+    def email(self, value: str) -> None:
+        self.data["email"] = value
+
+    @property
+    def username(self) -> str:
+        return self.data["username"]
+
+    @username.setter
+    def username(self, value: str) -> None:
+        self.data["username"] = value
+
+    @property
+    def display_name(self) -> str:
+        return self.data.get("displayname", self.username)
+
+    @display_name.setter
+    def display_name(self, value: str) -> None:
+        self.data["displayname"] = value
+
+    @property
+    def dob(self) -> str:
+        return self.data["dob"]
+
+    @dob.setter
+    def dob(self, value: str) -> None:
+        self.data["dob"] = value
+
+    @property
+    def permissions(self) -> Permissions:
+        return Permissions(self.data.get("permissions", 71))
+
+    @property
+    def session(self) -> str | None:
+        return self.data.get("session", None)

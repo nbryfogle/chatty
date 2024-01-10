@@ -1,11 +1,13 @@
 """
 Objects.py holds a variety of objects that are used in the app,
-such as the User object and the Message object.
+such as the Permission enum, the Message object, and the Context
+object.
 """
 
-from enum import Flag, Enum
 from typing import TYPE_CHECKING
 from datetime import datetime
+from enums import Permissions, MessageType
+from database import DBUser
 
 if TYPE_CHECKING:
     from database import Database
@@ -18,7 +20,7 @@ class Message:
     def __init__(self, data: dict):
         self.id: int = data.get('id', None)
         self.content: str = data.get('message', data.get('content', None))
-        self.author: str | User = data.get('author', None)
+        self.author: str | "DBUser" = data.get('author', None)
         self.channel: str = data.get('channel', None)
         self.timestamp: str = data.get('timestamp', datetime.strftime(datetime.now(), "%H:%M:%S"))
         self.type: MessageType = data.get('type', MessageType.NORMAL)
@@ -97,6 +99,11 @@ class Application:
 
 
 class Context:
+    """
+    Interaction Context is an object that holds information about interactions between 
+    a user and the system. This is used to pass useful information between parts of the 
+    system, especially the command system. 
+    """
     def __init__(self, app: "Application", message: "Message"):
         self.app: "Application" = app
         self.message = message
@@ -108,6 +115,9 @@ class Context:
 
     @classmethod
     async def from_message(cls, app: "Application", message: "Message") -> "Context":
+        """
+        Create a Context object from a Message object.
+        """
         ctx = cls(app, message)
         ctx.mentioned = await ctx.get_mentions()
         ctx.command = await ctx.get_command()
@@ -117,6 +127,11 @@ class Context:
 
     @classmethod
     async def with_message(cls, message_data: dict, app: "Application", ) -> "Context":
+        """
+        Create a Context object from message data. Shorthand for creating a message
+        and then creating a context along side of it, because that seems to happen
+        a lot these days.
+        """
         message = Message(message_data)
         return await cls.from_message(app, message)
 
@@ -126,7 +141,7 @@ class Context:
         """
         for word in self.message.content.split():
             if word.startswith("@"):
-                user = await self.app.db.get_user(word[1:])
+                user = await DBUser.get(username=word[1:])
 
                 if user is not None:
                     self.mentions.append(user)
@@ -141,7 +156,7 @@ class Context:
         return None
 
     @property
-    def first_mention(self) -> "User | None":
+    def first_mention(self) -> "DBUser | None":
         """
         Get the first mention in the message.
         """
@@ -149,77 +164,3 @@ class Context:
             return self.mentions[0]
 
         return None
-
-
-class Permissions(Flag):
-    """
-    Flag enum to control what permissions a user
-    may have.
-    """
-    READ = 1
-    SEND = 2
-    EDIT = 4
-    DELETE = 8
-    BAN  = 16
-    KICK = 32
-    COMMANDS = 64
-    DELETE_OTHERS = 128
-
-
-class MessageType(Enum):
-    """
-    Enum to control what type of message is being sent.
-    """
-    NORMAL = "message"
-    COMMAND = "command"
-    ERROR = "error"
-    USER_CONNECT = "user_connect"
-    USER_DISCONNECT = "user_disconnect"
-
-
-class User:
-    """
-    User object to store user data. One day, this will become
-    a powerful object that can be used to interact with the 
-    database directly. Oh, the possibilities.
-    """
-    def __init__(self, data: dict):
-        self.email: str = data.get('email', None)
-        self.username: str = data.get('username', None)
-        self.password: str = data.get('password', None)
-        self.password_salt: str = data.get('password_salt', None)
-        self.displayname: str = data.get('displayname', None)
-        self.dob: str = data.get('dob', None)
-        self.session: str = data.get('session', None)
-        self.creation_date: str = data.get('creation_date', None)
-        self.permissions: Permissions = Permissions(data.get('permissions', None))
-
-    def to_dict(self) -> dict:
-        """
-        Serialize the user object into JSON format, 
-        to be sent to the client.
-        """
-        return {
-            "email": self.email,
-            "username": self.username,
-            "displayname": self.displayname,
-            "dob": self.dob,
-            "session": self.session,
-            "creation_date": self.creation_date,
-            "permissions": self.permissions.value,
-        }
-
-    def as_sendable(self) -> dict:
-        """
-        Serialize the user object into JSON format, 
-        to be sent to the client.
-        """
-        return {
-            "username": self.username,
-            "displayname": self.displayname,
-            "creation_date": self.creation_date,
-        }
-
-    def __repr__(self):
-        return f"<User {self.username}>"
-
