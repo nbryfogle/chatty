@@ -1,26 +1,13 @@
-class CommandError(Exception):
-    """
-    Exception to be raised when a command fails.
-    """
-    pass
+"""
+A collection of errors the app can raise. I do not think these are used anywhere.
+"""
 
+class DatabaseError(Exception):
+    """
+    Exception to be raised when something goes wrong in the database.
+    """
 
-class CommandNotFound(CommandError):
+class MalformedDataError(DatabaseError):
     """
-    Exception to be raised when a command is not found.
+    Exception to be raised when the data is malformed.
     """
-    pass
-
-
-class SocketError(Exception):
-    """
-    Exception to be raised when a socket fails.
-    """
-    pass
-
-
-class InsufficientPermissions(Exception):
-    """
-    Exception to be raised when a user has insufficient permissions.
-    """
-    pass
