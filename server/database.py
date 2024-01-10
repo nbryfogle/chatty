@@ -207,7 +207,8 @@ class DBUser:
         """
         await db.c.execute(
             """            
-            UPDATE users SET email = ?, username = ?, displayname = ?, dob = ?, session = ?, permissions = ? WHERE username = ?
+            UPDATE users SET email = ?, username = ?, displayname = ?, 
+            dob = ?, session = ?, permissions = ? WHERE username = ?
         """,
             (
                 self.email,
@@ -222,7 +223,6 @@ class DBUser:
 
         # This bullshit does NOT CARE if you exist or not. It will update you anyway.
         # I guess that's a job for whoever is calling this function.
-
         await db.conn.commit()
 
     def check_password(self, password: str) -> bool:
