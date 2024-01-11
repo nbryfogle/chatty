@@ -91,44 +91,6 @@ body {
     left: 10px;
 }
 
-#username{
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-size: 21px;
-    padding: 3px;
-    margin: 3px;
-    color: rgb(91, 44, 122);
-    text-decoration: none;
-    border-radius: 10px;
-}   
-#password{
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-size: 21px;
-    padding: 3px;
-    margin: 3px;
-    color: rgb(91, 44, 122);
-    text-decoration: none;
-    border-radius: 10px;
-}
-
-#email{
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-size: 21px;
-    padding: 3px;
-    margin: 3px;
-    color: rgb(91, 44, 122);
-    text-decoration: none;
-    border-radius: 10px;
-}
-
-/* #displayname{  
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    font-size: 21px;
-    padding: 3px;
-    margin: 3px;
-    color: rgb(91, 44, 122);
-    text-decoration: none;
-    border-radius: 10px;
-} */
 
 #signUp:hover{
     background-color: rgb(180, 133, 211);
