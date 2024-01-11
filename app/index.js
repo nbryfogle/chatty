@@ -74,7 +74,37 @@ socket.on("message", (data) => {
 });
 
 function sendMessage() {
-    socket.emit("message", $("#message").val());
+    let message = $("#message").val();
+    if (message.startsWith("/")) {
+        message = message.replace("/", "");
+        if (message==="logout") {
+            logout();
+        }
+        else if (message==="clear") {
+            $("#messages").empty();
+            $("html, body").animate({ scrollTop: 0 }, "slow");
+        }
+        else if (message.startsWith("color")) {
+            let color = message.split(" ")[1];
+            $("#messages").append(`<li style="color: ${color}">Changed color to ${color}</li>`);
+            $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
+        }
+        else if (message==="help") {
+            $("#messages").append(`<li>Commands:</br> 
+            logout - /logout - logs the user out (alternative to button)</br>
+            clear - /clear - empties the on-screen messages</br> 
+            color - /color #color_hex - changes the color of the user's name with hex</br>
+            help - /help - shows the user a list of commands</li>`);
+            $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
+        }
+        else {
+            $("#messages").append(`<li>Invalid command. Type /help for a list of client-side commands or ~help for a list of server-wide commands.</li>`);
+        }
+        
+    }
+    else {
+        socket.emit("message", message);
+    }
     document.getElementById("message").value = "";
 }
 

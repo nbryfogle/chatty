@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from database import DBUser
+from config import COMMAND_PREFIX
 from enums import MessageType, Permissions
 
 if TYPE_CHECKING:
@@ -176,7 +177,7 @@ class Context:
         """
         Get the command from the message.
         """
-        if self.message.content.startswith(":"):
+        if self.message.content.startswith(COMMAND_PREFIX):
             # This list comprehension removes the first word from the message, and then
             # joins the rest of the words back together. The [1:] removes the : from the command.
             return self.message.content.split()[0][1:]

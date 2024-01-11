@@ -13,6 +13,7 @@ from commands import command_register
 from database import DBUser, db
 from enums import MessageType, Permissions
 from objects import Application, Context
+from config import COMMAND_PREFIX
 from quart import Quart, request
 from quart_cors import cors
 
@@ -264,7 +265,7 @@ async def message(sid, data):
     )
 
     # If the message starts with a colon, it is a command.
-    if context.message.content.startswith(":"):
+    if context.message.content.startswith(COMMAND_PREFIX):
         if not user.permissions & Permissions.COMMANDS:
             # Reject the command if the user does not have permission to send commands.
             await server.send_message(

@@ -14,12 +14,7 @@ body {
 
 #message{
     justify-items: center;
-    /* styles the text box */
-    /*center the message box*/
     margin: 0 auto;
-    /* position the text box at the bottom left of the screen */
-    /* position: fixed; */
-    /* position: sticky; */
     bottom: 0;
     left: 0;
     border: 8px solid #ccc;
@@ -89,14 +84,6 @@ body {
     position: sticky;
     bottom: 10px;
     left: 10px;
-}
-
-
-#signUp:hover{
-    background-color: rgb(180, 133, 211);
-    /*Make the button italic when hovered*/
-    font-style: italic;
-    
 }
 
 .container button {

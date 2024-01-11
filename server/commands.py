@@ -11,16 +11,6 @@ from database import DBUser
 from enums import MessageType, Permissions
 from objects import Command, Context, Message
 
-HELP_MSG = """
-Current commands: (* = required argument)
-:help - this command, the very one you just used
-:bonk @username* - sends a wonderful message of cartoonish violence
-:kwispy @username* - Pyromaniacal version of :bonk
-:squiddy @username* - Meh, better if you figure this one out on your own...
-:chirp @username* - Deliver a good old-fasioned ice hockey chirp to one of your buddies
-:suck @username* - REDACTED
-"""
-
 
 command_register: list["Command"] = []
 
@@ -51,7 +41,7 @@ def command_msg(content: str, author: DBUser | str = "Server") -> Message:
     )
 
 
-@command("bonk", "Bonk a sucker on the head. Usage: :bonk @username")
+@command("bonk", "Bonk a sucker on the head. Usage: ~bonk @username")
 async def bonk(ctx: Context) -> Message | None:
     """
     'Bonk' a user.
@@ -81,7 +71,7 @@ async def bonk(ctx: Context) -> Message | None:
     )
 
 
-@command("help", "Get help. Usage: :help")
+@command("help", "Get help. Usage: ~help")
 async def help_command(ctx: Context) -> Message | None:
     """
     Displays all available commands and what they do.
@@ -93,7 +83,7 @@ async def help_command(ctx: Context) -> Message | None:
     return command_msg(content)
 
 
-@command("squiddy", "Send a squidward quote. Usage: :squiddy @username")
+@command("squiddy", "Send a squidward quote. Usage: ~squiddy @username")
 async def squiddy(ctx: Context) -> Message | None:
     """
     Send a random squidward quote, I guess?
@@ -113,7 +103,7 @@ async def squiddy(ctx: Context) -> Message | None:
     )
 
 
-@command("kwispy", "Light a sucker on fire. Usage: :kwispy @username")
+@command("kwispy", "Light a sucker on fire. Usage: ~kwispy @username")
 async def kwispy(ctx: Context) -> Message | None:
     """
     Send a fire-based meme message.
@@ -135,7 +125,7 @@ async def kwispy(ctx: Context) -> Message | None:
     )
 
 
-@command("chirp", "Insult someone, I guess. Usage: :chirp @username")
+@command("chirp", "Insult someone, I guess. Usage: ~chirp @username")
 async def chirp(ctx: Context) -> Message | None:
     """
     I don't know what this command's name is a reference to. Insult someone, I guess?
@@ -153,7 +143,7 @@ async def chirp(ctx: Context) -> Message | None:
     )
 
 
-@command("ban", "Ban a sucker. Usage: :ban @username")
+@command("ban", "Ban a sucker. Usage: ~ban @username")
 async def ban(ctx: Context) -> Message | None:
     """
     Ban a user from the chat.
