@@ -66,7 +66,7 @@ socket.on("message", (data) => {
     // If the type of message is a command, don't print the timestamp.
     // Otherwise, print the timestamp.
     if (data.type === "command") {
-        $("#messages").append(`<li>${data.author.displayname || data.author} ${data.message}</li>`);
+        $("#messages").append(`<li>${data.message}</li>`);
     } else {
         $("#messages").append(`<li>${data.author.displayname || data.author} at ${data.timestamp}: ${data.message}</li>`);
     }

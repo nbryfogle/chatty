@@ -57,25 +57,26 @@ async def bonk(ctx: Context) -> Message | None:
     'Bonk' a user.
     """
     bonk_messages = [
-        "bonks {} on the head",
-        "breaks {}'s kneecaps",
-        "bonks {}'s head into the ground",
-        "bonks {}'s head into the wall",
-        "bonks {}'s head into the ceiling",
-        "bonks {}'s head into the floor",
-        "bonks {}'s head into the table",
-        "bonks {}'s head into the chair",
-        "bonks {}'s head into the door",
-        "bonks {}'s head into the window",
-        "bonks {}'s head into the computer",
-        "bonks {} into the sun",
+        "{} bonks {} on the head",
+        "{} breaks {}'s kneecaps",
+        "{} bonks {}'s head into the ground",
+        "{} bonks {}'s head into the wall",
+        "{} bonks {}'s head into the ceiling",
+        "{} bonks {}'s head into the floor",
+        "{} bonks {}'s head into the table",
+        "{} bonks {}'s head into the chair",
+        "{} bonks {}'s head into the door",
+        "{} bonks {}'s head into the window",
+        "{} bonks {}'s head into the computer",
+        "{} bonks {} into the sun",
     ]
 
     if not ctx.first_mention:
         return None
 
     return command_msg(
-        random.choice(bonk_messages).format(ctx.first_mention.display_name),
+        random.choice(bonk_messages).format(ctx.message.author.display_name, 
+                                            ctx.first_mention.display_name),
         ctx.message.author,
     )
 
@@ -98,15 +99,16 @@ async def squiddy(ctx: Context) -> Message | None:
     Send a random squidward quote, I guess?
     """
     squid_mess = [
-        ": AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! "
-        "{}, YOUR RECKONING WILL BEFALL UPON YOU!",
-        "what if I pop my bumhole out and let it dry in the sun? {}",
+        "{from_user}: AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! "
+        "{to}, YOUR RECKONING WILL BEFALL UPON YOU!",
+        "What if I pop my bumhole out and let it dry in the sun, {to}?",
     ]
     if not ctx.first_mention:
         return None
 
     return command_msg(
-        random.choice(squid_mess).format(ctx.first_mention.display_name),
+        random.choice(squid_mess).format(from_user=ctx.message.author.display_name, 
+                                         to=ctx.first_mention.display_name),
         ctx.message.author,
     )
 
@@ -117,17 +119,18 @@ async def kwispy(ctx: Context) -> Message | None:
     Send a fire-based meme message.
     """
     kwispy_mess = [
-        "sets {} on fire.",
-        "sets {} alight with his magic butane blaster.",
-        "introduces {} to the complex process of combustion.",
-        "proceeds to melt {}'s face off.",
-        "lights {} on fire with some good ol' fasioned matches.",
+        "{} sets {} on fire.",
+        "{} sets {} alight with his magic butane blaster.",
+        "{} introduces {} to the complex process of combustion.",
+        "{} proceeds to melt {}'s face off.",
+        "{} lights {} on fire with some good ol' fasioned matches.",
     ]
     if not ctx.first_mention:
         return None
 
     return command_msg(
-        random.choice(kwispy_mess).format(ctx.first_mention.display_name),
+        random.choice(kwispy_mess).format(ctx.message.author.display_name,
+                                          ctx.first_mention.display_name),
         ctx.message.author,
     )
 
