@@ -87,6 +87,8 @@ function sendMessage() {
         else if (message.startsWith("color")) {
             let color = message.split(" ")[1];
             $("#messages").append(`<li style="color: ${color}">Changed color to ${color}</li>`);
+
+            // change the color of you username in the chat
             $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
         }
         else if (message==="help") {
