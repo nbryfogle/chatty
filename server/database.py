@@ -12,7 +12,7 @@ from enums import Permissions
 from errors import MalformedDataError
 
 if TYPE_CHECKING:
-    from objects import Message
+    from objects import Message, MessageResponse
 
 
 class Database:
@@ -110,6 +110,21 @@ class Database:
 
         await self.conn.commit()
 
+    async def capture_message_response(self, message: "MessageResponse"):
+        """
+        Capture a MessageResponse object to the database.
+        """
+        await self.c.execute(
+            "INSERT INTO messages (message, author, channel) VALUES (?, ?, ?)",
+            (
+                message.message.content,
+                message.user.display_name,
+                message.context_from.channel,
+            ),
+        )
+
+        await self.conn.commit()
+
     async def get_messages(self, amount: int = 20) -> list[dict]:
         """
         Get the last 10 messages from the database.
@@ -133,11 +148,12 @@ class DBUser:
     and, well, getting information. Obviously.
     """
 
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, sid: str | None = None):
         self.data = data
+        self.sid = sid
 
     @classmethod
-    async def get(cls, username: str) -> "DBUser | None":
+    async def get(cls, username: str, sid: str | None = None) -> "DBUser | None":
         """
         Get a user from the database.
         """
@@ -153,10 +169,10 @@ class DBUser:
         if user is None:
             return None
 
-        return cls(dict(user))
+        return cls(dict(user), sid)
 
     @classmethod
-    async def create(cls, data: dict) -> "DBUser":
+    async def create(cls, data: dict, sid: str) -> "DBUser":
         """
         The user wants to exist. What a shame.
         Data should look something like this:
@@ -197,7 +213,7 @@ class DBUser:
         )
 
         await db.conn.commit()
-        user = await cls.get(data["username"])
+        user = await cls.get(data["username"], sid)
 
         return user
 
@@ -301,6 +317,10 @@ class DBUser:
         Get the user's permissions.
         """
         return Permissions(self.data.get("permissions", 71))
+
+    @permissions.setter
+    def permissions(self, value: Permissions) -> None:
+        self.data["permissions"] = value.value
 
     @property
     def session(self) -> str | None:

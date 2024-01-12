@@ -6,6 +6,7 @@ object.
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+from dataclasses import dataclass
 
 from database import DBUser
 from config import COMMAND_PREFIX
@@ -16,30 +17,25 @@ if TYPE_CHECKING:
     from socketio import AsyncServer
 
 
+@dataclass
 class Message:
     """
-    Message object to store message data.
+    The Message object holds information that is useful when sending and receiving messages.
     """
 
-    def __init__(self, data: dict):
-        self.id: int = data.get("id", None)
-        self.content: str = data.get("message", data.get("content", None))
-        self.author: str | "DBUser" = data.get("author", None)
-        self.channel: str = data.get("channel", None)
-        self.timestamp: str = data.get(
-            "timestamp", datetime.strftime(datetime.now(), "%H:%M:%S")
-        )
-        self.type: MessageType = data.get("type", MessageType.NORMAL)
+    content: str
+    author: DBUser
+    channel: str = "general"
+    timestamp: str = datetime.strftime(datetime.now(), "%H:%M:%S")
+    type: MessageType = MessageType.NORMAL
 
-    def to_dict(self) -> dict:
+    def serialize(self) -> dict:
         """
-        Serialize the message object into JSON format,
-        to be sent to the client.
+        Serialize the message into a dictionary.
         """
         return {
-            "id": self.id,
             "message": self.content,
-            "author": self.author,
+            "author": self.author.as_sendable(),
             "channel": self.channel,
             "timestamp": self.timestamp,
             "type": self.type.value,
@@ -47,20 +43,36 @@ class Message:
 
     def as_sendable(self) -> dict:
         """
-        Serialize the message object into JSON format,
-        to be sent to the client.
+        Serialize the message into a dictionary, excluding
+        sensitive information.
         """
         return {
             "message": self.content,
-            "author": self.author
-            if isinstance(self.author, str)
-            else self.author.as_sendable(),
+            "author": self.author.as_sendable(),
             "timestamp": self.timestamp,
             "type": self.type.value,
         }
 
-    def __repr__(self):
-        return f"<Message {self.id}>"
+
+@dataclass
+class MessageResponse:
+    """
+    A MessageResponse used by the server to send messages to clients.
+    """
+
+    user: DBUser
+    context_from: "Context"
+    message: Message
+    is_ephemeral: bool = False
+
+    def serialize(self) -> dict:
+        return {
+            "message": self.message.content,
+            "author": self.user.as_sendable(),
+            "timestamp": self.message.timestamp,
+            "type": self.message.type.value,
+            "ephemeral": self.is_ephemeral,
+        }
 
 
 class Command:
@@ -108,12 +120,21 @@ class Application:
 
         return None
 
-    async def send_message(self, ctx: "Context", to: str | None = None) -> None:
+    async def send_message(self, message: MessageResponse) -> None:
         """
         Send a message to a channel and save the result in a database.
         """
-        await self.sio.emit("message", ctx.message.as_sendable(), to=to)
-        await self.db.capture_message(ctx.message)
+        if message.is_ephemeral:
+            await self.sio.emit("message", message.serialize(), to=message.user.sid)
+        else:
+            await self.sio.emit("message", message.serialize())
+
+        await self.db.capture_message_response(message)
+
+    async def user_message(self, context: "Context") -> None:
+        await self.sio.emit("message", context.message.as_sendable())
+
+        await self.db.capture_message(context.message)
 
 
 class Context:
@@ -131,6 +152,7 @@ class Context:
         self.is_command = False
         self.command = None
         self.args = []
+        self.channel = "general"
 
     @classmethod
     async def from_message(cls, app: "Application", message: "Message") -> "Context":
@@ -144,20 +166,6 @@ class Context:
 
         return ctx
 
-    @classmethod
-    async def with_message(
-        cls,
-        message_data: dict,
-        app: "Application",
-    ) -> "Context":
-        """
-        Create a Context object from message data. Shorthand for creating a message
-        and then creating a context along side of it, because that seems to happen
-        a lot these days.
-        """
-        message = Message(message_data)
-        return await cls.from_message(app, message)
-
     async def get_mentions(self) -> None:
         """
         Check if the message contains mentions.
@@ -165,7 +173,8 @@ class Context:
         for word in self.message.content.split():
             if word.startswith("@"):  # The mention character is @
                 user = await DBUser.get(
-                    username=word[1:]
+                    username=word[1:],
+                    sid=self.message.author.sid,
                 )  # [1:] removes the @ from the username
 
                 if user is not None:
@@ -193,3 +202,10 @@ class Context:
             return self.mentions[0]
 
         return None
+
+    @property
+    def author(self) -> DBUser:
+        """
+        Get the author of the message.
+        """
+        return self.message.author
