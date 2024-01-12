@@ -23,11 +23,15 @@ class Message:
     The Message object holds information that is useful when sending and receiving messages.
     """
 
-    content: str
-    author: DBUser
-    channel: str = "general"
-    timestamp: str = datetime.strftime(datetime.now(), "%H:%M:%S")
-    type: MessageType = MessageType.NORMAL
+    content: str  # The content of the message
+    author: DBUser | str | None  # The message's author
+    channel: str = "general"  # The channel the message is in (possibly for future use)
+    timestamp: str = datetime.strftime(
+        datetime.now(), "%H:%M:%S"
+    )  # The time the message was created
+    type: MessageType = (
+        MessageType.NORMAL
+    )  # The type of message, used to determine how the message is displayed
 
     def serialize(self) -> dict:
         """
@@ -35,7 +39,9 @@ class Message:
         """
         return {
             "message": self.content,
-            "author": self.author.as_sendable(),
+            "author": self.author.as_sendable()
+            if isinstance(self.author, DBUser)
+            else self.author,
             "channel": self.channel,
             "timestamp": self.timestamp,
             "type": self.type.value,
@@ -48,7 +54,9 @@ class Message:
         """
         return {
             "message": self.content,
-            "author": self.author.as_sendable(),
+            "author": self.author.as_sendable()
+            if isinstance(self.author, DBUser)
+            else self.author,
             "timestamp": self.timestamp,
             "type": self.type.value,
         }
@@ -60,10 +68,10 @@ class MessageResponse:
     A MessageResponse used by the server to send messages to clients.
     """
 
-    user: DBUser
-    context_from: "Context"
-    message: Message
-    is_ephemeral: bool = False
+    user: DBUser  # The user that is being responded to
+    context_from: "Context"  # The context that the message was sent from
+    message: Message  # The message being sent with the response
+    is_ephemeral: bool = False  # Whether everyone should see the message
 
     def serialize(self) -> dict:
         return {
@@ -82,7 +90,7 @@ class Command:
 
     def __init__(self, name: str, func, description: str):
         self.name = name
-        self.func = func
+        self.callback = func
         self.description = description
 
     async def execute(self, ctx: "Context") -> Message | None:
@@ -95,7 +103,7 @@ class Command:
         ):
             return None
 
-        return await self.func(ctx)
+        return await self.callback(ctx)
 
 
 class Application:
