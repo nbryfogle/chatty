@@ -10,10 +10,10 @@ import hypercorn.asyncio as hasync
 import hypercorn.config as hconfig
 import socketio
 from commands import command_register
-from database import DBUser, db
+from database import User, db
 from enums import MessageType, Permissions
 from objects import Application, Context, MessageResponse, Message
-from config import COMMAND_PREFIX
+from config import COMMAND_PREFIX, REQUIRED_USER_FIELDS
 from quart import Quart, request
 from quart_cors import cors
 
@@ -49,15 +49,9 @@ async def signup() -> tuple[dict[str, str], int]:
     """
     # Get the data from the request
     data: dict[str, str] = await request.get_json()
-    required_keys = [
-        "username",
-        "password",
-        "email",
-        "dob",
-    ]  # Keys that are required to sign a user up
 
     # Make sure all of the necessary information is supplied by the client
-    if not data or not all(key in data and data[key] for key in required_keys):
+    if not data or not all(key in data and data[key] for key in REQUIRED_USER_FIELDS):
         return {"status": "error", "message": "Invalid data"}, 400
 
     # Check if the email is valid, poorly. Maybe regex would be helpful here?
@@ -68,16 +62,13 @@ async def signup() -> tuple[dict[str, str], int]:
     if not data.get("displayname"):
         data["displayname"] = data["username"]
 
-    # Insert the user into the database
-    user = await DBUser.create(
-        {
-            "username": data["username"],
-            "password": data["password"],
-            "email": data["email"],
-            "displayname": data["displayname"],
-            "dob": data["dob"],
-        }
-    )
+    # Create a user object and insert it into the database
+    user = await User(
+        username=data["username"],
+        email=data["email"],
+        displayname=data["displayname"],
+        dob=data["dob"],
+    ).create(data["password"])
 
     return {"status": "success", "user": user.as_sendable()}, 200
 
@@ -99,7 +90,7 @@ async def login() -> tuple[dict[str, str], int]:
 
     # Check if the data is valid, if the user exists and whether the password matches after hashing
     # If the user exists and the password matches, return a token
-    user = await DBUser.get(data["username"])
+    user = await User.get(data["username"])
 
     # If the user is None, that means it does not exist.
     if user is None:
@@ -124,7 +115,7 @@ async def get_user(username) -> tuple[dict[str, str | dict], int]:
     """
     Returns information about a user from the database.
     """
-    user = await DBUser.get(username)  # Get the user from the database
+    user = await User.get(username)  # Get the user from the database
 
     # If the user does not exist, return an error
     if user is None:
@@ -159,7 +150,7 @@ async def connect(sid: str, data: dict, auth: str):
         await sio.disconnect(sid)
         return
 
-    user = await DBUser.get(username, sid)
+    user = await User.get(username, sid)
 
     # If the user does not exist, or the user does not have permission to connect,
     # disconnect them.
@@ -232,7 +223,7 @@ async def message(sid, data):
         server,
         Message(
             content=data,
-            author=await DBUser.get(session["username"], sid),
+            author=await User.get(session["username"], sid),
         ),
     )
 

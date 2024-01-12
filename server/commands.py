@@ -185,7 +185,7 @@ async def ban(ctx: Context) -> MessageResponse | None:
 
     # Setting the permissions to 0 will prevent the user from doing anything
     ctx.first_mention.permissions = Permissions(0)
-    await ctx.first_mention.update()
+    await ctx.first_mention.save()
 
     return MessageResponse(
         ctx.author,

@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 
-from database import DBUser
+from database import User
 from config import COMMAND_PREFIX
 from enums import MessageType, Permissions
 
@@ -24,7 +24,7 @@ class Message:
     """
 
     content: str  # The content of the message
-    author: DBUser | str | None  # The message's author
+    author: User | str | None  # The message's author
     channel: str = "general"  # The channel the message is in (possibly for future use)
     timestamp: str = datetime.strftime(
         datetime.now(), "%H:%M:%S"
@@ -40,7 +40,7 @@ class Message:
         return {
             "message": self.content,
             "author": self.author.as_sendable()
-            if isinstance(self.author, DBUser)
+            if isinstance(self.author, User)
             else self.author,
             "channel": self.channel,
             "timestamp": self.timestamp,
@@ -55,7 +55,7 @@ class Message:
         return {
             "message": self.content,
             "author": self.author.as_sendable()
-            if isinstance(self.author, DBUser)
+            if isinstance(self.author, User)
             else self.author,
             "timestamp": self.timestamp,
             "type": self.type.value,
@@ -68,7 +68,7 @@ class MessageResponse:
     A MessageResponse used by the server to send messages to clients.
     """
 
-    user: DBUser  # The user that is being responded to
+    user: User  # The user that is being responded to
     context_from: "Context"  # The context that the message was sent from
     message: Message  # The message being sent with the response
     is_ephemeral: bool = False  # Whether everyone should see the message
@@ -180,7 +180,7 @@ class Context:
         """
         for word in self.message.content.split():
             if word.startswith("@"):  # The mention character is @
-                user = await DBUser.get(
+                user = await User.get(
                     username=word[1:],
                     sid=self.message.author.sid,
                 )  # [1:] removes the @ from the username
@@ -202,7 +202,7 @@ class Context:
         return None
 
     @property
-    def first_mention(self) -> "DBUser | None":
+    def first_mention(self) -> User | None:
         """
         Get the first mention in the message.
         """
@@ -212,7 +212,7 @@ class Context:
         return None
 
     @property
-    def author(self) -> DBUser:
+    def author(self) -> User:
         """
         Get the author of the message.
         """
