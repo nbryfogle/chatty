@@ -10,10 +10,10 @@ import hypercorn.asyncio as hasync
 import hypercorn.config as hconfig
 import socketio
 from commands import command_register
-from database import DBUser, db
+from database import User, db
 from enums import MessageType, Permissions
-from objects import Application, Context
-from config import COMMAND_PREFIX
+from objects import Application, Context, MessageResponse, Message
+from config import COMMAND_PREFIX, REQUIRED_USER_FIELDS
 from quart import Quart, request
 from quart_cors import cors
 
@@ -49,15 +49,9 @@ async def signup() -> tuple[dict[str, str], int]:
     """
     # Get the data from the request
     data: dict[str, str] = await request.get_json()
-    required_keys = [
-        "username",
-        "password",
-        "email",
-        "dob",
-    ]  # Keys that are required to sign a user up
 
     # Make sure all of the necessary information is supplied by the client
-    if not data or not all(key in data and data[key] for key in required_keys):
+    if not data or not all(key in data and data[key] for key in REQUIRED_USER_FIELDS):
         return {"status": "error", "message": "Invalid data"}, 400
 
     # Check if the email is valid, poorly. Maybe regex would be helpful here?
@@ -68,16 +62,13 @@ async def signup() -> tuple[dict[str, str], int]:
     if not data.get("displayname"):
         data["displayname"] = data["username"]
 
-    # Insert the user into the database
-    user = await DBUser.create(
-        {
-            "username": data["username"],
-            "password": data["password"],
-            "email": data["email"],
-            "displayname": data["displayname"],
-            "dob": data["dob"],
-        }
-    )
+    # Create a user object and insert it into the database
+    user = await User(
+        username=data["username"],
+        email=data["email"],
+        displayname=data["displayname"],
+        dob=data["dob"],
+    ).create(data["password"])
 
     return {"status": "success", "user": user.as_sendable()}, 200
 
@@ -99,7 +90,7 @@ async def login() -> tuple[dict[str, str], int]:
 
     # Check if the data is valid, if the user exists and whether the password matches after hashing
     # If the user exists and the password matches, return a token
-    user = await DBUser.get(data["username"])
+    user = await User.get(data["username"])
 
     # If the user is None, that means it does not exist.
     if user is None:
@@ -124,7 +115,7 @@ async def get_user(username) -> tuple[dict[str, str | dict], int]:
     """
     Returns information about a user from the database.
     """
-    user = await DBUser.get(username)  # Get the user from the database
+    user = await User.get(username)  # Get the user from the database
 
     # If the user does not exist, return an error
     if user is None:
@@ -159,7 +150,7 @@ async def connect(sid: str, data: dict, auth: str):
         await sio.disconnect(sid)
         return
 
-    user = await DBUser.get(username)
+    user = await User.get(username, sid)
 
     # If the user does not exist, or the user does not have permission to connect,
     # disconnect them.
@@ -228,58 +219,61 @@ async def message(sid, data):
     # Perhaps the database should store the day the message was
     # send too, and it should be the client's decision what
     # to show.
-    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+    context = await Context.from_message(
+        server,
+        Message(
+            content=data,
+            author=await User.get(session["username"], sid),
+        ),
+    )
 
-    # Enforce the character limit of 1000 characters.
-    if len(data) > 1000:
+    # If the user does not exist, do nothing.
+    if context.author is None:
+        return
+
+    # If the user does not have permission to send messages, reject the message.
+    if not context.author.permissions & Permissions.SEND:
         await server.send_message(
-            await Context.with_message(
-                {
-                    "message": "Message exceeds limit of 1000 characters.",
-                    "author": "server",
-                    "channel": "general",
-                    "timestamp": current_time,
-                    "type": MessageType.ERROR,
-                },
-                server,
-            ),
-            sid,
+            MessageResponse(
+                context.author,
+                message=Message(
+                    "You do not have permission to send messages.",
+                    author="Server",
+                    type=MessageType.ERROR,
+                ),
+                is_ephemeral=True,
+            )
         )
         return
 
-    user = await DBUser.get(session["username"])
-
-    # If the user does not exist, do nothing.
-    if user is None:
+    # Enforce the character limit of 1000 characters.
+    if len(context.message.content) > 1000:
+        await server.send_message(
+            MessageResponse(
+                context.author,
+                Message(
+                    "Your message was too long. Please keep your messages under 1000 characters.",
+                    author="Server",
+                    type=MessageType.ERROR,
+                ),
+            )
+        )
         return
-
-    context = await Context.with_message(
-        {
-            "message": data,
-            "author": user,
-            "channel": "general",
-            "timestamp": current_time,
-            "type": MessageType.NORMAL,
-        },
-        server,
-    )
 
     # If the message starts with a colon, it is a command.
     if context.message.content.startswith(COMMAND_PREFIX):
-        if not user.permissions & Permissions.COMMANDS:
+        if not context.author.permissions & Permissions.COMMANDS:
             # Reject the command if the user does not have permission to send commands.
             await server.send_message(
-                await Context.with_message(
-                    {
-                        "message": "You do not have permission to send commands.",
-                        "author": "server",
-                        "channel": "general",
-                        "timestamp": current_time,
-                        "type": MessageType.ERROR,
-                    },
-                    server,
-                ),
-                sid,
+                MessageResponse(
+                    context.author,
+                    message=Message(
+                        "You do not have permission to send commands.",
+                        author="Server",
+                        type=MessageType.ERROR,
+                    ),
+                    is_ephemeral=True,
+                )
             )
             return
 
@@ -289,44 +283,26 @@ async def message(sid, data):
         # some reason. Inform the user.
         if command_message is None:
             await server.send_message(
-                await Context.with_message(
-                    {
-                        "message": "Command failed (invalid command or mention?).",
-                        "author": "Server",
-                        "channel": "general",
-                        "timestamp": current_time,
-                        "type": MessageType.ERROR,
-                    },
-                    server,
-                ),
-                sid,
+                MessageResponse(
+                    context.author,
+                    context,
+                    message=Message(
+                        "Command failed.",
+                        author="Server",
+                        type=MessageType.ERROR,
+                    ),
+                    is_ephemeral=True,
+                )
             )
 
         else:
             # Finally, send the command message to the user.
-            await server.send_message(
-                await Context.from_message(server, command_message)
-            )
-        return
+            await server.send_message(command_message)
 
-    # If the user does not have permission to send messages, reject the message.
-    if not user.permissions & Permissions.SEND:
-        await server.send_message(
-            await Context.with_message(
-                {
-                    "message": "You do not have permission to send messages.",
-                    "username": "Server",
-                    "time": current_time,
-                    "type": MessageType.ERROR,
-                },
-                server,
-            ),
-            sid,
-        )
         return
 
     # Finally, save the message to the database and send it to everyone.
-    await server.send_message(context)
+    await server.user_message(context)
 
 
 if __name__ == "__main__":
