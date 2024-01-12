@@ -285,6 +285,7 @@ async def message(sid, data):
             await server.send_message(
                 MessageResponse(
                     context.author,
+                    context,
                     message=Message(
                         "Command failed.",
                         author="Server",

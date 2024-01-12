@@ -165,11 +165,13 @@ class User:
         """,
             (username,),
         )
-        user = dict(await db.c.fetchone())
+        user = await db.c.fetchone()
 
         # The user doesn't exist. What a shame.
         if user is None:
             return None
+
+        user = dict(user)
 
         del user["password"]
         del user["password_salt"]

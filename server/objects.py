@@ -136,8 +136,7 @@ class Application:
             await self.sio.emit("message", message.serialize(), to=message.user.sid)
         else:
             await self.sio.emit("message", message.serialize())
-
-        await self.db.capture_message_response(message)
+            await self.db.capture_message_response(message)
 
     async def user_message(self, context: "Context") -> None:
         await self.sio.emit("message", context.message.as_sendable())
