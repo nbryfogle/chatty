@@ -251,11 +251,19 @@ class User:
             "creation_date": self.creation_date,
         }
 
-    def check_password(self, password: str) -> bool:
+    async def check_password(self, password: str) -> bool:
         """
         Check if the user's password is correct.
         """
-        return bcrypt.checkpw(bytes(password, encoding="utf-8"), self.password)
+        # Get the password from the database
+        await db.c.execute(
+            """
+            SELECT password FROM users WHERE username = ?
+        """,
+            (self.username,),
+        )
+        correct_password = (await db.c.fetchone())["password"]
+        return bcrypt.checkpw(bytes(password, encoding="utf-8"), correct_password)
 
     async def refresh_session(self) -> str:
         """

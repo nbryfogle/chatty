@@ -98,7 +98,7 @@ async def login() -> tuple[dict[str, str], int]:
 
     # The check_password function will return True if the password matches,
     # and False if it does not.
-    if user.check_password(data["password"]):
+    if await user.check_password(data["password"]):
         if (
             user.session is None
         ):  # Create a new session token if the user does not have one
