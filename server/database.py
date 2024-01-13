@@ -6,15 +6,16 @@ import asyncio
 from typing import TYPE_CHECKING
 from uuid import uuid4
 from dataclasses import dataclass
+from datetime import datetime
 
 import aiosqlite
 import bcrypt
-from enums import Permissions
+from enums import Permissions, MessageType
 from errors import MalformedDataError
 from config import REQUIRED_USER_FIELDS
 
 if TYPE_CHECKING:
-    from objects import Message, MessageResponse
+    from objects import Context
 
 
 class Database:
@@ -92,41 +93,6 @@ class Database:
 
         return user["username"]
 
-    async def capture_message(self, message: "Message") -> None:
-        """
-        Capture a message from a user and store it in the database.
-        """
-        await self.c.execute(
-            """
-            INSERT INTO messages (message, author, channel)
-            VALUES (?, ?, ?)
-        """,
-            (
-                message.content,
-                message.author.display_name
-                if isinstance(message.author, User)
-                else message.author,
-                "general",
-            ),
-        )
-
-        await self.conn.commit()
-
-    async def capture_message_response(self, message: "MessageResponse"):
-        """
-        Capture a MessageResponse object to the database.
-        """
-        await self.c.execute(
-            "INSERT INTO messages (message, author, channel) VALUES (?, ?, ?)",
-            (
-                message.message.content,
-                message.user.display_name,
-                message.context_from.channel,
-            ),
-        )
-
-        await self.conn.commit()
-
     async def get_messages(self, amount: int = 20) -> list[dict]:
         """
         Get the last 10 messages from the database.
@@ -141,6 +107,128 @@ class Database:
         messages = await self.c.fetchall()
 
         return [dict(message) for message in messages][::-1]
+
+
+@dataclass
+class Message:
+    """
+    The Message object holds information that is useful when sending and receiving messages.
+    """
+
+    content: str  # The content of the message
+    author: "User | str | None"  # The message's author
+    id: int | None = None  # The message's ID
+    channel: str = "general"  # The channel the message is in (possibly for future use)
+    timestamp: str = datetime.strftime(
+        datetime.now(), "%H:%M:%S"
+    )  # The time the message was created
+    type: MessageType = (
+        MessageType.NORMAL
+    )  # The type of message, used to determine how the message is displayed
+
+    @classmethod
+    async def get(cls, id: int) -> "Message | None":
+        """
+        Get a message from the database.
+        """
+        await db.c.execute(
+            """
+            SELECT * FROM messages WHERE id = ?
+        """,
+            (id,),
+        )
+        message = await db.c.fetchone()
+
+        if message is None:
+            return None
+
+        return cls(**dict(message))
+
+    async def save(self) -> None:
+        """
+        Save the message in the database. This also
+        attaches an ID argument to the message.
+        """
+        await db.c.execute(
+            """
+            INSERT INTO messages (message, author, channel)
+            VALUES (?, ?, ?)
+        """,
+            (self.content, getattr(self.author, "username", self.author), self.channel),
+        )
+        await db.conn.commit()
+
+        await db.c.execute(
+            """
+            SELECT * FROM messages WHERE message = ? AND author = ? AND channel = ?
+        """,
+            (self.content, getattr(self.author, "username", self.author), self.channel),
+        )
+        self.id = (await db.c.fetchone())["id"]
+
+    def serialize(self) -> dict:
+        """
+        Serialize the message into a dictionary.
+        """
+        return {
+            "message": self.content,
+            "author": self.author.as_sendable()
+            if isinstance(self.author, User)
+            else self.author,
+            "channel": self.channel,
+            "timestamp": self.timestamp,
+            "type": self.type.value,
+        }
+
+    def as_sendable(self) -> dict:
+        """
+        Serialize the message into a dictionary, excluding
+        sensitive information.
+        """
+        return {
+            "message": self.content,
+            "author": self.author.as_sendable()
+            if isinstance(self.author, User)
+            else self.author,
+            "timestamp": self.timestamp,
+            "type": self.type.value,
+        }
+
+
+@dataclass
+class MessageResponse:
+    """
+    A MessageResponse used by the server to send messages to clients.
+    """
+
+    user: "User"  # The user that is being responded to
+    context_from: "Context"  # The context that the message was sent from
+    message: Message  # The message being sent with the response
+    is_ephemeral: bool = False  # Whether everyone should see the message
+
+    async def save(self) -> None:
+        """
+        Save a MessageResponse to the database.
+        """
+        await db.c.execute(
+            "INSERT INTO messages (message, author, channel) VALUES (?, ?, ?)",
+            (
+                self.message.content,
+                self.user.username,
+                self.context_from.channel,
+            ),
+        )
+
+        await db.conn.commit()
+
+    def serialize(self) -> dict:
+        return {
+            "message": self.message.content,
+            "author": self.user.as_sendable(),
+            "timestamp": self.message.timestamp,
+            "type": self.message.type.value,
+            "ephemeral": self.is_ephemeral,
+        }
 
 
 @dataclass

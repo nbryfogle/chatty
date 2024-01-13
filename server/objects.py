@@ -4,83 +4,15 @@ such as the Permission enum, the Message object, and the Context
 object.
 """
 
-from datetime import datetime
 from typing import TYPE_CHECKING
-from dataclasses import dataclass
 
-from database import User
+from database import User, Message, MessageResponse
 from config import COMMAND_PREFIX
-from enums import MessageType, Permissions
+from enums import Permissions
 
 if TYPE_CHECKING:
-    from database import Database
     from socketio import AsyncServer
-
-
-@dataclass
-class Message:
-    """
-    The Message object holds information that is useful when sending and receiving messages.
-    """
-
-    content: str  # The content of the message
-    author: User | str | None  # The message's author
-    channel: str = "general"  # The channel the message is in (possibly for future use)
-    timestamp: str = datetime.strftime(
-        datetime.now(), "%H:%M:%S"
-    )  # The time the message was created
-    type: MessageType = (
-        MessageType.NORMAL
-    )  # The type of message, used to determine how the message is displayed
-
-    def serialize(self) -> dict:
-        """
-        Serialize the message into a dictionary.
-        """
-        return {
-            "message": self.content,
-            "author": self.author.as_sendable()
-            if isinstance(self.author, User)
-            else self.author,
-            "channel": self.channel,
-            "timestamp": self.timestamp,
-            "type": self.type.value,
-        }
-
-    def as_sendable(self) -> dict:
-        """
-        Serialize the message into a dictionary, excluding
-        sensitive information.
-        """
-        return {
-            "message": self.content,
-            "author": self.author.as_sendable()
-            if isinstance(self.author, User)
-            else self.author,
-            "timestamp": self.timestamp,
-            "type": self.type.value,
-        }
-
-
-@dataclass
-class MessageResponse:
-    """
-    A MessageResponse used by the server to send messages to clients.
-    """
-
-    user: User  # The user that is being responded to
-    context_from: "Context"  # The context that the message was sent from
-    message: Message  # The message being sent with the response
-    is_ephemeral: bool = False  # Whether everyone should see the message
-
-    def serialize(self) -> dict:
-        return {
-            "message": self.message.content,
-            "author": self.user.as_sendable(),
-            "timestamp": self.message.timestamp,
-            "type": self.message.type.value,
-            "ephemeral": self.is_ephemeral,
-        }
+    from database import Database
 
 
 class Command:
@@ -136,12 +68,12 @@ class Application:
             await self.sio.emit("message", message.serialize(), to=message.user.sid)
         else:
             await self.sio.emit("message", message.serialize())
-            await self.db.capture_message_response(message)
+            await message.save()
 
     async def user_message(self, context: "Context") -> None:
         await self.sio.emit("message", context.message.as_sendable())
 
-        await self.db.capture_message(context.message)
+        await context.message.save()
 
 
 class Context:
