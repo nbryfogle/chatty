@@ -235,7 +235,7 @@ class MessageResponse:
 class User:
     username: str
     email: str
-    creation_date: str
+    creation_date: str = datetime.strftime(datetime.now(), "%H:%M:%S")
     permissions: Permissions = Permissions(71)
     displayname: str | None = None
     session: str | None = None
@@ -264,7 +264,7 @@ class User:
         del user["password"]
         del user["password_salt"]
 
-        user["permissions"] = Permissions(user["permissions"])
+        user["permissions"] = Permissions(int(user["permissions"]))
 
         return cls(
             sid=sid,
@@ -296,7 +296,10 @@ class User:
         and storing it.
         """
         serialized = self.serialize()
-        if not all(key in serialized for key in REQUIRED_USER_FIELDS):
+        new_req = REQUIRED_USER_FIELDS.copy()
+        new_req.remove("password")
+
+        if not all(key in serialized for key in new_req):
             raise MalformedDataError("Unable to create user: Missing key in data.")
 
         salt = bcrypt.gensalt()
@@ -305,7 +308,7 @@ class User:
 
         await db.c.execute(
             """
-            INSERT INTO users (username, email, password, password_salt, permissions, displayname, dob)
+            INSERT INTO users (username, email, permissions, displayname, dob, password, password_salt)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
             (*serialized.values(),),

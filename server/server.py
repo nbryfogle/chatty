@@ -236,6 +236,7 @@ async def message(sid, data):
         await server.send_message(
             MessageResponse(
                 context.author,
+                context,
                 message=Message(
                     "You do not have permission to send messages.",
                     author="Server",
@@ -251,11 +252,13 @@ async def message(sid, data):
         await server.send_message(
             MessageResponse(
                 context.author,
+                context,
                 Message(
                     "Your message was too long. Please keep your messages under 1000 characters.",
                     author="Server",
                     type=MessageType.ERROR,
                 ),
+                is_ephemeral=True,
             )
         )
         return
@@ -267,8 +270,9 @@ async def message(sid, data):
             await server.send_message(
                 MessageResponse(
                     context.author,
+                    context,
                     message=Message(
-                        "You do not have permission to send commands.",
+                        "You do not have permission to psend commands.",
                         author="Server",
                         type=MessageType.ERROR,
                     ),
