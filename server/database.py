@@ -362,7 +362,12 @@ class User:
         Refresh the user's session token.
         """
         self.session = str(uuid4())
-        await self.save()
+
+        await db.c.execute(
+            "UPDATE users SET session = ? WHERE username = ?",
+            (self.session, self.username),
+        )
+        await db.conn.commit()
 
         return self.session
 
