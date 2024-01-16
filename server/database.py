@@ -1,5 +1,7 @@
 """
-I can't wait to write code comments on this abomination.
+Controls all database related things. This includes our
+pseudo-ORM objects like User and Message, and the main Database 
+object that they all connect to.
 """
 
 import asyncio
