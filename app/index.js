@@ -65,10 +65,10 @@ socket.on("message", (data) => {
 
     // If the type of message is a command, don't print the timestamp.
     // Otherwise, print the timestamp.
-    if (data.type === "command") {
+    if (["command", "user_connect", "user_disconnect"].includes(data.type)) {
         $("#messages").append(`<li>${data.message}</li>`);
     } else {
-        $("#messages").append(`<li>${data.author.displayname || data.author} at ${data.timestamp}: ${data.message}</li>`);
+        $("#messages").append(`<li>${data.author.displayname || data.username} at ${data.timestamp}: ${data.message}</li>`);
     }
     $("html, body").animate({ scrollTop: document.body.scrollHeight }, "slow");
 });

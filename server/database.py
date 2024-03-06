@@ -203,7 +203,7 @@ class MessageResponse:
     A MessageResponse used by the server to send messages to clients.
     """
 
-    user: "User"  # The user that is being responded to
+    user: "User | str"  # The user that is being responded to
     context_from: "Context"  # The context that the message was sent from
     message: Message  # The message being sent with the response
     is_ephemeral: bool = False  # Whether everyone should see the message
@@ -216,7 +216,7 @@ class MessageResponse:
             "INSERT INTO messages (message, author, channel) VALUES (?, ?, ?)",
             (
                 self.message.content,
-                self.user.username,
+                self.user.username if isinstance(self.user, User) else self.user,
                 self.context_from.channel,
             ),
         )
@@ -226,11 +226,12 @@ class MessageResponse:
     def serialize(self) -> dict:
         return {
             "message": self.message.content,
-            "author": self.user.as_sendable(),
+            "author": self.user.as_sendable() if isinstance(self.user, User) else self.user,
             "timestamp": self.message.timestamp,
             "type": self.message.type.value,
             "ephemeral": self.is_ephemeral,
         }
+
 
 
 @dataclass

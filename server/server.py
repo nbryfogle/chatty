@@ -162,17 +162,21 @@ async def connect(sid: str, data: dict, auth: str):
 
     # Save the session token to the socketIO session
     await sio.save_session(sid, {"username": user.username})
+    # Send the messages to the user
     await sio.emit(
         "previous_messages", {"messages": messages}, to=sid
-    )  # Send the messages to the user
-    await sio.emit(  # Send a welcome message!
-        "message",
-        {
-            "message": f"{user.username} has connected as {user.display_name}",
-            "username": "Server",
-            "time": datetime.datetime.now().strftime("%H:%M:%S"),
-            "type": "user_connect",
-        },
+    )
+    # Send the message through the chat
+    await server.send_message(
+        MessageResponse(
+            "Server",
+            context_from=Context(server, Message("User connected", author="Server")),
+            message=Message(
+                f"Welcome to the chat, {user.display_name}!",
+                author="Server",
+                type=MessageType.USER_CONNECT,
+            ),
+        )
     )
 
     print("connect ", sid)
@@ -191,13 +195,16 @@ async def disconnect(sid):
         return
 
     # Send a message to all users that the user has disconnected.
-    await sio.emit(
-        "message",
-        {
-            "message": f'{session["username"]} has disconnected',
-            "username": "Server",
-            "time": datetime.datetime.now().strftime("%H:%M:%S"),
-        },
+    await server.send_message(
+        MessageResponse(
+            "Server",
+            context_from=Context(server, Message("User disconnected", author="Server")),
+            message=Message(
+                f"{session['username']} has disconnected",
+                author="Server",
+                type=MessageType.USER_DISCONNECT,
+            ),
+        )
     )
 
 
