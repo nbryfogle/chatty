@@ -91,7 +91,7 @@ async def squiddy(ctx: Context) -> MessageResponse | None:
     squid_mess = [
         "{from_user}: AUGUST 12th, 2036: THE HEAT DEATH OF THE UNIVERSE! "
         "{to}, YOUR RECKONING WILL BEFALL UPON YOU!",
-        "What if I pop my bumhole out and let it dry in the sun, {to}?",
+        "Bruh, your clarinet playing is so bad, it makes me want to move to a different city.",
     ]
     if not ctx.first_mention:
         return None
