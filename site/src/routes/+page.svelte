@@ -1,2 +1,16 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<h1>Retro Rendezvous!</h1>
+
+<head>
+    <title>Chat | App</title>
+</head>
+
+
+<body>
+    <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
+</body>
+
+<div class="message">
+
+    <!-- Messages will appear about here, lad! -->
+</div>
+
