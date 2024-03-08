@@ -2,12 +2,12 @@
 ## To Do
 - [x] Implement Login
 - [ ] Style main webpage
-- [ ] Store messages and implement persistent messages
+- [x] Store messages and implement persistent messages
 - [ ] Assign colors to connected users so I don't want to airfry my spine when I log on
 
 
 ## Ideas
-- [ ] Switch from aiohttp 
+- [x] Switch from aiohttp 
 - [ ] Implement different channels
 
 
