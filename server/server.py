@@ -4,7 +4,6 @@ the HTTP requests.
 """
 
 import asyncio
-import datetime
 
 import hypercorn.asyncio as hasync
 import hypercorn.config as hconfig
@@ -163,9 +162,7 @@ async def connect(sid: str, data: dict, auth: str):
     # Save the session token to the socketIO session
     await sio.save_session(sid, {"username": user.username})
     # Send the messages to the user
-    await sio.emit(
-        "previous_messages", {"messages": messages}, to=sid
-    )
+    await sio.emit("previous_messages", {"messages": messages}, to=sid)
     # Send the message through the chat
     await server.send_message(
         MessageResponse(

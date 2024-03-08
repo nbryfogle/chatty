@@ -6,3 +6,4 @@ quart
 hypercorn
 quart-cors
 pre-commit
+ruff
