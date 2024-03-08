@@ -20,13 +20,6 @@ function login() {
         let data = await response.json();
 
         console.log(data);
-        if (response.status === 200) {
-            document.cookie = `token=${data.session}; path=/;`;
-        } else {
-            alert("Error logging in: " + data.message);
-            return;
-        }
-
         window.location.replace("/app");
     }).catch((error) => {
         console.error("Error:", error);

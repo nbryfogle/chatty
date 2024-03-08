@@ -3,41 +3,10 @@
 const BASE_URL = window.location.origin.replace("3000", "5000") + "/"; 
 
 document.addEventListener("keypress", onEvent); // Submit a message when the enter key is pressed
-  
-function getCookie(cname) {
-    // Return the value of a cookie based on its name. Thanks, w3schools!
-    let name = cname + "=";
-    let ca = document.cookie.split(';');
-
-    for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-
-    return "";
-}
-
-function logout() {
-    // Remove the token from the cookies and redirect to the login page
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    window.location.replace("/app/login");
-}
-
-// No token? No connection.
-if (!getCookie("token")) {
-    logout();
-    console.log("No token found");
-}
 
 // Connect to the SocketIO server
 const socket = io(BASE_URL, {
     reconnectionDelayMax: 10000,
-    auth: getCookie("token"),
 });
 
 // Once we are connected, just print that status to the terminal for now.
