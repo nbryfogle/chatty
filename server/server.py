@@ -145,14 +145,7 @@ async def connect(sid: str, environ: dict):
     cookies = SimpleCookie(environ.get('HTTP_COOKIE'))
     auth = cookies.get("session")
 
-    username = await db.authenticate_user(auth)  # Check if the session token is valid
-
-    # If the username is None, that means the session token is invalid.
-    if username is None:
-        await sio.disconnect(sid)
-        return
-
-    user = await User.get(username, sid)
+    user = await User.get(auth, sid)
 
     # If the user does not exist, or the user does not have permission to connect,
     # disconnect them.

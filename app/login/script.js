@@ -16,11 +16,15 @@ function login() {
         let data = await response.json();
 
         console.log(data);
+<<<<<<< HEAD
         if (response.status === 200) {
             window.location.replace("/app");
         } else {
             alert("Error logging in: " + data.message);
         }
+=======
+        window.location.replace("/app");
+>>>>>>> refs/remotes/origin/auth
     }).catch((error) => {
         console.error("Error:", error);
         alert("Error logging in: " + error);
