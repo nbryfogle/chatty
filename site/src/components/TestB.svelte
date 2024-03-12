@@ -9,8 +9,8 @@
     }
 
     button {
-        height: 8rem;
-        width: 16rem;
+        height: 4rem;
+        width: 8rem;
         background-color: blueviolet;
         border-color: cornflowerblue;
         font-size: 2.25rem;
