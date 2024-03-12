@@ -2,7 +2,7 @@
     import { io } from "socket.io-client";
     import type { message } from "$lib";
     import Cookie from "js-cookie";
-    import { onMount } from "svelte";
+    import TestB from "../components/TestB.svelte";
 
     const socket = io("127.0.0.1:5000", {
         auth: {
@@ -20,6 +20,10 @@
         }
     ];
 
+    function handleClick(){
+        alert('clicked')
+    }
+    
     socket.on("connect", () => {
         console.log("Connected to server");
     });
@@ -40,16 +44,8 @@
 
 
 <h1>Retro Rendezvous!</h1>
-
-<head>
-    <title>Chat | App</title>
-</head>
-
-
-<body>
-    <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
-</body>
-
+<h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
+    
 <div class="message">
     {#each messages as message (message.message)}
         {#if typeof message.author === "string"}
@@ -62,3 +58,7 @@
 
 <input type="text" placeholder="Message" bind:value={messageContent} />
 <button on:click={sendMessage}>Send</button>
+
+
+<TestB on:click={handleClick} />
+
