@@ -160,12 +160,7 @@ class Message:
         )
         await db.conn.commit()
 
-        await db.c.execute(
-            """
-            SELECT * FROM messages WHERE message = ? AND author = ? AND channel = ?
-        """,
-            (self.content, getattr(self.author, "username", self.author), self.channel),
-        )
+        await db.c.execute("SELECT last_insert_rowid() as id")
         self.id = (await db.c.fetchone())["id"]
 
     def serialize(self) -> dict:
@@ -173,6 +168,7 @@ class Message:
         Serialize the message into a dictionary.
         """
         return {
+            "id": self.id,
             "message": self.content,
             "author": self.author.as_sendable()
             if isinstance(self.author, User)
@@ -188,6 +184,7 @@ class Message:
         sensitive information.
         """
         return {
+            "id": self.id,
             "message": self.content,
             "author": self.author.as_sendable()
             if isinstance(self.author, User)
@@ -226,12 +223,13 @@ class MessageResponse:
     def serialize(self) -> dict:
         return {
             "message": self.message.content,
-            "author": self.user.as_sendable() if isinstance(self.user, User) else self.user,
+            "author": self.user.as_sendable()
+            if isinstance(self.user, User)
+            else self.user,
             "timestamp": self.message.timestamp,
             "type": self.message.type.value,
             "ephemeral": self.is_ephemeral,
         }
-
 
 
 @dataclass

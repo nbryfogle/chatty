@@ -10,15 +10,7 @@
         },
     });
 
-    let messages: message[] = [
-        {
-            message: "Welcome to Retro Rendezvous!",
-            author: "Retro Rendezvous",
-            timestamp: "now",
-            type: 12,
-            ephemeral: false,
-        }
-    ];
+    let messages: message[] = [];
 
     function handleClick(){
         alert('clicked')
@@ -31,6 +23,7 @@
     socket.on("message", (data: message) => {
         console.log("Message from server", data);
         messages = [...messages, data];
+        console.log(messages);
     });
 
     let messageContent: string;
@@ -47,7 +40,7 @@
 <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
     
 <div class="message">
-    {#each messages as message (message.message)}
+    {#each messages as message (message.id)}
         {#if typeof message.author === "string"}
             <p>{message.author}: {message.message}</p>
         {:else}

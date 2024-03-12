@@ -71,9 +71,8 @@ class Application:
             await message.save()
 
     async def user_message(self, context: "Context") -> None:
-        await self.sio.emit("message", context.message.as_sendable())
-
         await context.message.save()
+        await self.sio.emit("message", context.message.as_sendable())
 
 
 class Context:

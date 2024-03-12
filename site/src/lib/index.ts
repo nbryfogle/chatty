@@ -9,6 +9,7 @@ export interface user {
 }
 
 export interface message { 
+    id: Number;
     message: string;
     author: user | string;
     timestamp: string;
