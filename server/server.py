@@ -13,8 +13,9 @@ from database import User, db, Message, MessageResponse
 from enums import MessageType, Permissions
 from objects import Application, Context
 from config import COMMAND_PREFIX, REQUIRED_USER_FIELDS
-from quart import Quart, request
+from quart import Quart, request, make_response
 from quart_cors import cors
+from http.cookies import SimpleCookie
 
 # Define the socketIO server and the Quart app
 # SocketIO controls the chat functionality, while Quart
@@ -98,12 +99,17 @@ async def login() -> tuple[dict[str, str], int]:
     # The check_password function will return True if the password matches,
     # and False if it does not.
     if await user.check_password(data["password"]):
-        if (
-            user.session is None
-        ):  # Create a new session token if the user does not have one
+        # Create a new session token if the user does not have one
+        if (user.session is None):  
             await user.refresh_session()
 
-        return {"status": "success", "session": user.session}, 200
+        # Create a response object to send so we can set a cookie on the client side
+        response = await make_response({"status": "success"})
+
+        # Make a session cookie on the client side
+        response.set_cookie("session", user.session)
+
+        return response, 200
 
     # If that does not work, it means the password is incorrect.
     return {"status": "error", "message": "Incorrect password"}, 401
@@ -124,23 +130,20 @@ async def get_user(username) -> tuple[dict[str, str | dict], int]:
 
 
 @sio.event
-async def connect(sid: str, data: dict, auth: str):
+async def connect(sid: str, environ: dict):
     """
     When a user connects, their session token will be checked. If the
     token is valid, it will allow them to connect.
     """
     print("attempting to connect...")
-    print(auth)
 
     # Do something useless with the data variable to get the linter
     # to stop complaining.
-    print(data)
+    print(environ)
 
-    # If the auth variable is not a string, disconnect the user.
-    # This means the user did not provide a session token.
-    if not isinstance(auth, str):
-        await sio.disconnect(sid)
-        return
+    # Retrieve the cookie set by the login request
+    cookies = SimpleCookie(environ.get('HTTP_COOKIE'))
+    auth = cookies.get("session")
 
     username = await db.authenticate_user(auth)  # Check if the session token is valid
 

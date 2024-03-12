@@ -2,10 +2,6 @@ const BASE_URL = window.location.origin.replace("3000", "5000") + "/";
 
 document.addEventListener("keypress", onEvent);
 
-if (document.cookie.includes("token") && document.cookie.split("token=")[1].split(";")[0] !== "") {
-    window.location.replace("/app");
-}
-
 function login() {
     fetch(BASE_URL + "api/login", {
         method: "POST",
@@ -21,13 +17,10 @@ function login() {
 
         console.log(data);
         if (response.status === 200) {
-            document.cookie = `token=${data.session}; path=/;`;
+            window.location.replace("/app");
         } else {
             alert("Error logging in: " + data.message);
-            return;
         }
-
-        window.location.replace("/app");
     }).catch((error) => {
         console.error("Error:", error);
         alert("Error logging in: " + error);
