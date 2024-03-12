@@ -108,7 +108,7 @@ async def login() -> tuple[dict[str, str], int]:
     # The check_password function will return True if the password matches,
     # and False if it does not.
     if await user.check_password(data["password"]):
-        access_token = create_access_token(identity=user.username)
+        access_token = create_access_token(identity=user.username, expires_delta=False)
 
         return jsonify(body={"status": "success"}, access_token=access_token), 200
 
