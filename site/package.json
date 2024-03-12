@@ -21,6 +21,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/js-cookie": "^3.0.6",
+		"js-cookie": "^3.0.5",
 		"socket.io-client": "^4.7.4"
 	}
 }

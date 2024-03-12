@@ -1,8 +1,14 @@
 <script lang="ts">
     import { io } from "socket.io-client";
     import type { message } from "$lib";
+    import Cookie from "js-cookie";
+    import { onMount } from "svelte";
 
-    const socket = io("https://x36dw3tq-5000.use.devtunnels.ms/");
+    const socket = io("127.0.0.1:5000", {
+        auth: {
+            token: Cookie.get("token"),
+        },
+    });
 
     let messages: message[] = [
         {
@@ -22,6 +28,14 @@
         console.log("Message from server", data);
         messages = [...messages, data];
     });
+
+    let messageContent: string;
+
+    function sendMessage() {
+        console.log("Sending message...");
+        socket.emit("message", messageContent);
+        messageContent = "";
+    }
 </script>
 
 
@@ -38,9 +52,13 @@
 
 <div class="message">
     {#each messages as message (message.message)}
-        <p>{message.message}</p>
+        {#if typeof message.author === "string"}
+            <p>{message.author}: {message.message}</p>
+        {:else}
+            <p>{message.author.displayname || message.author.username}: {message.message}</p>
+        {/if}
     {/each}
 </div>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<input type="text" placeholder="Message" bind:value={messageContent} />
+<button on:click={sendMessage}>Send</button>

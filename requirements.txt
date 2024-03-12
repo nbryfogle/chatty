@@ -7,3 +7,4 @@ hypercorn
 quart-cors
 pre-commit
 ruff
+quart_jwt_extended

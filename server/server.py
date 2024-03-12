@@ -13,8 +13,13 @@ from database import User, db, Message, MessageResponse
 from enums import MessageType, Permissions
 from objects import Application, Context
 from config import COMMAND_PREFIX, REQUIRED_USER_FIELDS
-from quart import Quart, request
+from quart import Quart, request, jsonify
 from quart_cors import cors
+from quart_jwt_extended import JWTManager, create_access_token, decode_token
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Define the socketIO server and the Quart app
 # SocketIO controls the chat functionality, while Quart
@@ -22,12 +27,14 @@ from quart_cors import cors
 sio = socketio.AsyncServer(cors_allowed_origins="*", async_mode="asgi")
 app = Quart(__name__, instance_relative_config=True)
 app = cors(app, allow_origin="*")
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET")
 
 # Connect to the database and connect an ASGI app to the socketIO server
 # in this case, Hypercorn is used as the ASGI server.
 sio_app = socketio.ASGIApp(sio, app)
 hypercorn_config = hconfig.Config.from_mapping(bind=["localhost:5000"], debug=True)
 server = Application(db, sio, command_register)
+jwt = JWTManager(app)
 
 
 @app.route("/api/signup", methods=["POST"])
@@ -80,6 +87,9 @@ async def login() -> tuple[dict[str, str], int]:
     the socketIO server.
     """
     # Get the data from the request
+    if not request.is_json:
+        return {"status": "error", "message": "Invalid data"}, 401
+
     data = await request.get_json()
 
     # If the data does not contain a username or password, we cannot log the user in.
@@ -98,12 +108,9 @@ async def login() -> tuple[dict[str, str], int]:
     # The check_password function will return True if the password matches,
     # and False if it does not.
     if await user.check_password(data["password"]):
-        if (
-            user.session is None
-        ):  # Create a new session token if the user does not have one
-            await user.refresh_session()
+        access_token = create_access_token(identity=user.username)
 
-        return {"status": "success", "session": user.session}, 200
+        return jsonify(body={"status": "success"}, access_token=access_token), 200
 
     # If that does not work, it means the password is incorrect.
     return {"status": "error", "message": "Incorrect password"}, 401
@@ -138,11 +145,19 @@ async def connect(sid: str, data: dict, auth: str):
 
     # If the auth variable is not a string, disconnect the user.
     # This means the user did not provide a session token.
-    if not isinstance(auth, str):
+    if not isinstance(auth, dict):
         await sio.disconnect(sid)
         return
 
-    username = await db.authenticate_user(auth)  # Check if the session token is valid
+    async with app.app_context():
+        decoded_token = decode_token(auth["token"])
+
+    if not decoded_token:
+        await sio.disconnect(sid)
+        return
+
+    username = decoded_token.get("identity")
+    # Check if the session token is valid
 
     # If the username is None, that means the session token is invalid.
     if username is None:
