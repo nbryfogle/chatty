@@ -2,11 +2,6 @@
 <button on:click>Enter</button>
 
 <style>
-    @font-face{
-        font-family: 'WhiteRabbit-47pD';
-        src: url('/static/WhiteRabbit-47pD.tff') format('tff');
-
-    }
 
     button {
         height: 4rem;
@@ -16,7 +11,7 @@
         font-size: 2.25rem;
         background-position: 100%;
         border-radius: 10px;
-        font-family: 'WhiteRabbit27pD' ;
+        font-family: Verdana;
         background-image: linear-gradient(45deg, cornflowerblue, transparent 50%);
         transition: 300ms ease-in-out ;
         color: azure;
