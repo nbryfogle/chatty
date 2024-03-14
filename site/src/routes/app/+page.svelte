@@ -3,6 +3,7 @@
     import type { message } from "$lib";
     import Cookie from "js-cookie";
     import SendButton from "../../components/SendButton.svelte";
+    import Message from "../../components/Message.svelte";
     import { goto } from "$app/navigation";
 
     const socket = io("http://127.0.0.1:5000", {
@@ -54,12 +55,12 @@
     <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
     
     <div class="content">
-        <div class="message">
+        <div class="message-box">
             {#each messages as message (message.id)}
                 {#if typeof message.author === "string"}
-                    <p>{message.author}: {message.message}</p>
+                    <Message isUser={true} username={message.author} message={message.message} />
                 {:else}
-                    <p>{message.author.displayname || message.author.username}: {message.message}</p>
+                    <Message isUser={false} username={message.author.username} message={message.message} />
                 {/if}
             {/each}
         </div>
@@ -84,7 +85,7 @@
         text-align: left;
     }
 
-    .message{
+    .message-box {
         justify-content: left;
         overflow-y: auto;
         border: 2px solid black;
