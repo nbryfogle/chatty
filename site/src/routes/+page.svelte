@@ -94,7 +94,7 @@
     {/each}
 </div>
 
-<input type="text" bind:value={messageContent} on:keydown={onKeyDown} id="messageBox" placeholder="Enter a message..."/>
+<input type="text" bind:value={messageContent} on:keydown={onKeyDown} id="messageBox" placeholder="Enter a message..."/> 
 <TestB on:click={sendMessage} />
 
 
