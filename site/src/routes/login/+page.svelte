@@ -6,7 +6,7 @@
     let cookie = Cookie.get('token');;
 
     onMount(async () => {
-        let res = await fetch('http://127.0.0.1:5000/api/validate', {
+        let res = await fetch(`${import.meta.env.VITE_API}/api/validate`, {
             method: "POST",
             headers: {
                 'Authorization': `Bearer ${cookie}`
@@ -24,7 +24,7 @@
     async function login() {
         console.log("Logging in...");
 
-        let res = await fetch("http://127.0.0.1:5000/api/login", {
+        let res = await fetch(`${import.meta.env.VITE_API}/api/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

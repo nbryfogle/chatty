@@ -7,7 +7,7 @@
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
 
-    const socket = io("http://127.0.0.1:5000", {
+    const socket = io(import.meta.env.VITE_API, {
         auth: {
             token: Cookie.get("token"),
         },
@@ -16,7 +16,7 @@
     let messages: message[] = [];
     
     onMount(async () => {
-        const response = await fetch("http://127.0.0.1:5000/api/messages", {
+        const response = await fetch(`${import.meta.env.VITE_API}/api/messages`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
