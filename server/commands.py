@@ -56,7 +56,7 @@ async def bonk(ctx: Context) -> MessageResponse | None:
             content=random.choice(bonk_messages).format(
                 ctx.message.author.display_name, ctx.first_mention.display_name
             ),
-            author=None,
+            author="Command Processor",
             type=MessageType.COMMAND,
         ),
     )
@@ -76,7 +76,7 @@ async def help_command(ctx: Context) -> MessageResponse | None:
         ctx,
         Message(
             content=content,
-            author=None,
+            author="Command Processor",
             type=MessageType.COMMAND,
         ),
         is_ephemeral=True,
@@ -104,7 +104,7 @@ async def squiddy(ctx: Context) -> MessageResponse | None:
                 from_user=ctx.message.author.display_name,
                 to=ctx.first_mention.display_name,
             ),
-            author=None,
+            author="Command Processor",
             type=MessageType.COMMAND,
         ),
     )
@@ -132,7 +132,7 @@ async def kwispy(ctx: Context) -> MessageResponse | None:
             content=random.choice(kwispy_mess).format(
                 ctx.message.author.display_name, ctx.first_mention.display_name
             ),
-            author=None,
+            author="Command Processor",
             type=MessageType.COMMAND,
         ),
     )
@@ -155,7 +155,7 @@ async def chirp(ctx: Context) -> MessageResponse | None:
         ctx,
         Message(
             content=random.choice(chirpmess).format(ctx.first_mention.display_name),
-            author=None,
+            author="Command Processor",
             type=MessageType.COMMAND,
         ),
     )
@@ -177,7 +177,7 @@ async def ban(ctx: Context) -> MessageResponse | None:
             ctx,
             Message(
                 content="You don't have permission to ban users.",
-                author=None,
+                author="Command Processor",
                 type=MessageType.ERROR,
             ),
             is_ephemeral=True,
@@ -192,7 +192,7 @@ async def ban(ctx: Context) -> MessageResponse | None:
         ctx,
         Message(
             content=f"{ctx.first_mention.username} ({ctx.first_mention.display_name}) has been banned.",
-            author=None,
+            author="Command Processor",
             type=MessageType.COMMAND,
         ),
     )

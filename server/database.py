@@ -222,6 +222,7 @@ class MessageResponse:
 
     def serialize(self) -> dict:
         return {
+            "id": self.message.id,
             "message": self.message.content,
             "author": self.user.as_sendable()
             if isinstance(self.user, User)

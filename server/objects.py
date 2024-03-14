@@ -64,11 +64,12 @@ class Application:
         """
         Send a message to a channel and save the result in a database.
         """
+        await message.message.save()
+
         if message.is_ephemeral:
             await self.sio.emit("message", message.serialize(), to=message.user.sid)
         else:
             await self.sio.emit("message", message.serialize())
-            await message.save()
 
     async def user_message(self, context: "Context") -> None:
         await context.message.save()
