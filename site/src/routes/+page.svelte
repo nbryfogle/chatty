@@ -12,9 +12,6 @@
 
     let messages: message[] = [];
 
-    function handleClick(){
-        alert('clicked')
-    }
     
     socket.on("connect", () => {
         console.log("Connected to server");
@@ -33,8 +30,56 @@
         socket.emit("message", messageContent);
         messageContent = "";
     }
+
+    function onKeyDown(e: { keyCode: any; }){
+        switch(e.keyCode){
+            case 13:
+                sendMessage();
+                break;
+        }
+    }
 </script>
 
+<style>
+    h1{
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        text-align:center;
+    }
+
+    h6{
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        text-align: left;
+        margin-left: 1rem;
+    }
+
+    .message{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: left;
+        margin-top: 32rem;
+        margin-bottom: 2rem;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+    }
+
+    /* p{
+        font-size: 1.5rem;
+        margin: 0.5rem;
+    } */
+
+    #messageBox{
+        font-size: 1.5rem;
+        margin-top: 2rem;
+        margin-left: 1rem;
+        width: 50%;
+        height: 4rem;
+        border-radius: 15px;
+    }
+
+
+
+
+</style>
 
 <h1>Retro Rendezvous!</h1>
 <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
@@ -49,8 +94,12 @@
     {/each}
 </div>
 
-<input type="text" placeholder="Message" bind:value={messageContent} />
-<button on:click={sendMessage}>Send</button>
+<input type="text" bind:value={messageContent} on:keydown={onKeyDown} id="messageBox" placeholder="Enter a message..."/>
+<TestB on:click={sendMessage} />
 
 
-<TestB on:click={handleClick} />
+
+
+
+
+

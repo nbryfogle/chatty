@@ -17,6 +17,13 @@
         color: azure;
         font-weight: bold;
         cursor: pointer;
+        position:sticky;
+        display: flex;
+        
+        
+        margin-left: 64rem;
+        flex-wrap: wrap;
+
     }
 
     button:hover {
