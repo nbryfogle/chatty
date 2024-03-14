@@ -2,7 +2,7 @@
     import { io } from "socket.io-client";
     import type { message } from "$lib";
     import Cookie from "js-cookie";
-    import TestB from "../../components/TestB.svelte";
+    import SendButton from "../../components/SendButton.svelte";
     import { goto } from "$app/navigation";
 
     const socket = io("http://127.0.0.1:5000", {
@@ -66,7 +66,7 @@
         
         <div class="input-area">
             <input type="text" bind:value={messageContent} on:keydown={onKeyDown} id="messageBox" placeholder="Enter a message..."/> 
-            <TestB on:click={sendMessage} />
+            <SendButton on:click={sendMessage} />
         </div>
     </div>
 </div>

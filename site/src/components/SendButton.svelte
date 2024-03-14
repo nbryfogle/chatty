@@ -1,5 +1,5 @@
 
-<button on:click>Enter</button>
+<button on:click>Send</button>
 
 <style>
 
