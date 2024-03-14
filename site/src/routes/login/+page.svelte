@@ -49,3 +49,4 @@
 <input type="text" placeholder="Username" bind:value={username} />
 <input type="password" placeholder="Password" bind:value={password}>
 <button on:click={login}>Login</button>
+<p>Don't have an account? <a href="/signup">Sign up</a></p>
