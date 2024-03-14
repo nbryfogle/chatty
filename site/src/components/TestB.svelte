@@ -21,6 +21,7 @@
         transition: 300ms ease-in-out ;
         color: azure;
         font-weight: bold;
+        cursor: pointer;
     }
 
     button:hover {

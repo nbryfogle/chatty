@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { redirect } from "@sveltejs/kit";
     import Cookie from "js-cookie"; 
 
     let username: string;
@@ -24,6 +25,7 @@
         } 
         let data = await res.json();
         Cookie.set("token", data.access_token);
+        redirect(302, "/");
     }
 </script>
 
