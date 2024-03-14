@@ -130,6 +130,24 @@ async def get_user(username) -> tuple[dict[str, str | dict], int]:
     return {"status": "success", "user": user.as_sendable()}, 200
 
 
+@app.route("/api/validate", methods=["POST"])
+async def validate_token():
+    """
+    Validate a JWT token from the Auth header
+    """
+    token = request.headers.get("Authorization").removeprefix("Bearer ").strip()
+
+    if not token:
+        return {"status": "error", "message": "No token provided"}, 401
+
+    try:
+        decode_token(token)
+    except Exception:
+        return {"status": "error", "message": "Invalid token"}, 401
+
+    return {"status": "success", "message": "Token is valid"}, 200
+
+
 @sio.event
 async def connect(sid: str, data: dict, auth: str):
     """

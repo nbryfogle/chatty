@@ -1,6 +1,22 @@
 <script lang="ts">
-    import { redirect } from "@sveltejs/kit";
+    import { goto } from "$app/navigation";
     import Cookie from "js-cookie"; 
+    import { onMount } from 'svelte';
+
+    let cookie = Cookie.get('token');;
+
+    onMount(async () => {
+        let res = await fetch('http://127.0.0.1:5000/api/validate', {
+            method: "POST",
+            headers: {
+                'Authorization': `Bearer ${cookie}`
+            }
+        });
+
+        if (res.ok) {
+            goto('/app');
+        }
+    });
 
     let username: string;
     let password: string;
@@ -24,8 +40,8 @@
             return;
         } 
         let data = await res.json();
-        Cookie.set("token", data.access_token);
-        redirect(302, "/");
+        Cookie.set("token", data.access_token, { path: "/" });
+        goto("/app");
     }
 </script>
 

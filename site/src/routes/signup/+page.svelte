@@ -1,5 +1,23 @@
 <script lang="ts">
-    import { redirect } from "@sveltejs/kit";
+    import { goto } from "$app/navigation";
+    import Cookie from "js-cookie";
+    import { onMount } from 'svelte';
+
+    let cookie = Cookie.get('token');;
+
+    onMount(async () => {
+        let res = await fetch('http://127.0.0.1:5000/api/validate', {
+            method: "POST",
+            headers: {
+                'Authorization': `Bearer ${cookie}`
+            }
+        });
+
+        if (res.ok) {
+            goto('/app');
+        }
+    });
+
 
     let email: string;
     let username: string;
@@ -32,7 +50,7 @@
 
         let data = await res.json();
         console.log(data);
-        redirect(302, "/login");
+        goto("/app");
     }
 
 </script>
