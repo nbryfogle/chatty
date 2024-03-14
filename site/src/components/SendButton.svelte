@@ -11,7 +11,7 @@
         border-radius: 10px;
         font-family: Verdana;
         background-image: linear-gradient(45deg, cornflowerblue, transparent 50%);
-        transition: 300ms ease-in-out ;
+        /* transition: 300ms ease-in-out ; */
         color: azure;
         font-weight: bold;
         cursor: pointer;
