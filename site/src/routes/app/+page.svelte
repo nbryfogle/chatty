@@ -28,6 +28,18 @@
         messages = data.messages;
     })
 
+    /** @type {import('svelte/action').Action<HTMLElement, string>}  */
+    function messageBoxHook(node: HTMLElement, messages: message[]) {
+        return {
+            update: (messages: message[]) => {
+                node.scroll({
+                    top: node.scrollHeight,
+                    behavior: "smooth",
+                });
+            },
+        }
+    }
+
     socket.on("connect", () => {
         console.log("Connected to server");
     });
@@ -69,7 +81,7 @@
     <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
     
     <div class="content">
-        <div class="message-box">
+        <div class="message-box" use:messageBoxHook={messages}>
             {#each messages as message (message.id)}
                 {#if typeof message.author === "string"}
                     <Message isUser={true} username={message.author} message={message.message} />
