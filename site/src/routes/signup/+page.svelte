@@ -62,5 +62,7 @@
 <input type="date" placeholder="Date of birth" bind:value={dob}/>
 <input type="password" placeholder="Password" bind:value={password}/>
 <input type="button" value="Sign up" on:click={signUp}/>
+<p>Already have an account? <a href="/login">Login</a></p>
+
 
 
