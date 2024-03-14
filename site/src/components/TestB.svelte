@@ -4,8 +4,6 @@
 <style>
 
     button {
-        height: 4rem;
-        width: 8rem;
         background-color: blueviolet;
         border-color: cornflowerblue;
         font-size: 2.25rem;
@@ -17,13 +15,6 @@
         color: azure;
         font-weight: bold;
         cursor: pointer;
-        position:sticky;
-        display: flex;
-        
-        
-        margin-left: 64rem;
-        flex-wrap: wrap;
-
     }
 
     button:hover {

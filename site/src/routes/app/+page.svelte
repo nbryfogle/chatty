@@ -49,55 +49,68 @@
     }
 </script>
 
-<h1>Retro Rendezvous!</h1>
-<h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
+<div class="body">
+    <h1>Retro Rendezvous!</h1>
+    <h6><span>&copy;</span> Copyright, Norwegian Ball Waffles</h6>
     
-<div class="message">
-    {#each messages as message (message.id)}
-        {#if typeof message.author === "string"}
-            <p>{message.author}: {message.message}</p>
-        {:else}
-            <p>{message.author.displayname || message.author.username}: {message.message}</p>
-        {/if}
-    {/each}
+    <div class="content">
+        <div class="message">
+            {#each messages as message (message.id)}
+                {#if typeof message.author === "string"}
+                    <p>{message.author}: {message.message}</p>
+                {:else}
+                    <p>{message.author.displayname || message.author.username}: {message.message}</p>
+                {/if}
+            {/each}
+        </div>
+        
+        <div class="input-area">
+            <input type="text" bind:value={messageContent} on:keydown={onKeyDown} id="messageBox" placeholder="Enter a message..."/> 
+            <TestB on:click={sendMessage} />
+        </div>
+    </div>
 </div>
 
-<input type="text" bind:value={messageContent} on:keydown={onKeyDown} id="messageBox" placeholder="Enter a message..."/> 
-<TestB on:click={sendMessage} />
 
 <style>
+
     h1{
         font-family: Verdana, Geneva, Tahoma, sans-serif;
-        text-align:center;
+        text-align: center;
     }
 
     h6{
         font-family: Verdana, Geneva, Tahoma, sans-serif;
         text-align: left;
-        margin-left: 1rem;
     }
 
     .message{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: left;
-        margin-top: 32rem;
-        margin-bottom: 2rem;
+        overflow-y: auto;
+        border: 2px solid black;
         font-family: Verdana, Geneva, Tahoma, sans-serif;
+        padding: 10px;
+        flex-grow: 1;
     }
 
-    /* p{
-        font-size: 1.5rem;
-        margin: 0.5rem;
-    } */
+    .content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 80vh;
+        margin: 20px;
+    }
 
     #messageBox{
         font-size: 1.5rem;
-        margin-top: 2rem;
-        margin-left: 1rem;
-        width: 50%;
-        height: 4rem;
         border-radius: 15px;
+        flex: 2;
+        margin-right: 10px;
+    }
+
+    .input-area {
+        display: flex;
+        margin-top: 10px;
+        width: 100%;
     }
 </style>
