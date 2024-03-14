@@ -11,7 +11,7 @@
         {:else}
             <span class="other">{username}: </span>
         {/if}
-        {message}
+        {@html message}
     </p>
 </div>
 

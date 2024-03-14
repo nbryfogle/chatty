@@ -5,6 +5,7 @@
     import SendButton from "../../components/SendButton.svelte";
     import Message from "../../components/Message.svelte";
     import { goto } from "$app/navigation";
+    import { onMount } from "svelte";
 
     const socket = io("http://127.0.0.1:5000", {
         auth: {
@@ -13,11 +14,20 @@
     });
 
     let messages: message[] = [];
-
-    function handleClick(){
-        alert('clicked')
-    }
     
+    onMount(async () => {
+        const response = await fetch("http://127.0.0.1:5000/api/messages", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Cookie.get("token")}`,
+            },
+        });
+
+        const data = await response.json();
+        messages = data.messages;
+    })
+
     socket.on("connect", () => {
         console.log("Connected to server");
     });
@@ -36,6 +46,10 @@
     let messageContent: string;
 
     function sendMessage() {
+        if (messageContent === "") {
+            return;
+        }
+
         console.log("Sending message...");
         socket.emit("message", messageContent);
         messageContent = "";

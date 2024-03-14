@@ -15,7 +15,12 @@ from objects import Application, Context
 from config import COMMAND_PREFIX, REQUIRED_USER_FIELDS
 from quart import Quart, request, jsonify
 from quart_cors import cors
-from quart_jwt_extended import JWTManager, create_access_token, decode_token
+from quart_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    decode_token,
+    jwt_required,
+)
 from dotenv import load_dotenv
 import os
 
@@ -148,6 +153,30 @@ async def validate_token():
     return {"status": "success", "message": "Token is valid"}, 200
 
 
+@app.route("/api/messages", methods=["GET"])
+@jwt_required
+async def get_messages():
+    """
+    Get all messages from the database
+    """
+    raw_messages = await db.get_messages()
+    messages = []
+
+    for message in raw_messages:
+        messages.append(
+            Message(
+                message["message"],
+                message["author"],
+                message["id"],
+                message["channel"],
+                message["timestamp"],
+                MessageType.NORMAL,
+            ).as_sendable()
+        )
+
+    return {"status": "success", "messages": messages}, 200
+
+
 @sio.event
 async def connect(sid: str, data: dict, auth: str):
     """
@@ -190,12 +219,26 @@ async def connect(sid: str, data: dict, auth: str):
         await sio.disconnect(sid)
         return
 
-    messages = await db.get_messages()  # Get recent messages from the database
+    # raw_messages: list[dict] = await db.get_messages()  # Get recent messages from the database
+
+    # messages = []
+
+    # for message in raw_messages:
+    #     messages.append(
+    #         Message(
+    #             message["message"],
+    #             message["author"],
+    #             message["id"],
+    #             message["channel"],
+    #             message["timestamp"],
+    #             MessageType.NORMAL,
+    #         ).as_sendable()
+    #     )
 
     # Save the session token to the socketIO session
     await sio.save_session(sid, {"username": user.username})
     # Send the messages to the user
-    await sio.emit("previous_messages", {"messages": messages}, to=sid)
+    # await sio.emit("previous_messages", messages, to=sid)
     # Send the message through the chat
     await server.send_message(
         MessageResponse(
