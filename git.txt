@@ -1,0 +1,4 @@
+git pull // make sure you pull your changes
+git add . // "stage" your changes
+git commit -m "message" // commit
+git push // push your changes to the repository
