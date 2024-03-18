@@ -292,7 +292,7 @@ async def message(sid, data):
     print(data)
 
     # if there is no message data, do nothing.
-    if not data:
+    if not data or data.strip() == "":
         return
 
     # Get the current time in hours, minutes, and seconds.
