@@ -136,6 +136,7 @@ async def get_user(username) -> tuple[dict[str, str | dict], int]:
 
 
 @app.route("/api/validate", methods=["POST"])
+@jwt_required
 async def validate_token():
     """
     Validate a JWT token from the Auth header
