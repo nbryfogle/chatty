@@ -161,7 +161,7 @@ async def chirp(ctx: Context) -> MessageResponse | None:
     )
 
 
-@command("ban", "Ban a sucker. Usage: ~ban @username")
+@command("imprison", "basically just bans a sucker. Usage: ~imprison @username")
 async def ban(ctx: Context) -> MessageResponse | None:
     """
     Ban a user from the chat.
@@ -176,7 +176,7 @@ async def ban(ctx: Context) -> MessageResponse | None:
             ctx.author,
             ctx,
             Message(
-                content="You don't have permission to ban users.",
+                content="You don't have permission to jail users.",
                 author="Command Processor",
                 type=MessageType.ERROR,
             ),
@@ -191,7 +191,44 @@ async def ban(ctx: Context) -> MessageResponse | None:
         ctx.author,
         ctx,
         Message(
-            content=f"{ctx.first_mention.username} ({ctx.first_mention.display_name}) has been banned.",
+            content=f"{ctx.first_mention.username} ({ctx.first_mention.display_name}) has been jailed.",
+            author="Command Processor",
+            type=MessageType.COMMAND,
+        ),
+    )
+
+
+@command("Release", "Unbans the once undesirable")
+async def release(ctx: Context) -> MessageResponse | None:
+    """
+    Unban a user from the chat.
+    """
+    # Can't release a sucker if there's no sucker to release
+    if not ctx.first_mention:
+        return None
+
+    # Can't release a sucker if you don't have permissions to do so
+    if not ctx.message.author.permissions & Permissions.BAN:
+        return MessageResponse(
+            ctx.author,
+            ctx,
+            Message(
+                content="You don't have permission to release users.",
+                author="Command Processor",
+                type=MessageType.ERROR,
+            ),
+            is_ephemeral=True,
+        )
+
+    # Setting the permissions to 1 will allow the user to do things
+    ctx.first_mention.permissions = Permissions(71)
+    await ctx.first_mention.save()
+
+    return MessageResponse(
+        ctx.author,
+        ctx,
+        Message(
+            content=f"{ctx.first_mention.username} ({ctx.first_mention.display_name}) has been released.",
             author="Command Processor",
             type=MessageType.COMMAND,
         ),
